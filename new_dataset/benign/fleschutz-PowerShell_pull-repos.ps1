@@ -1,0 +1,60 @@
+﻿<#
+.SYNOPSIS
+	Pulls updates into Git repos
+.DESCRIPTION
+	This PowerShell script pulls updates into all Git repositories in a folder (including submodules).
+.PARAMETER parentDir
+	Specifies the path to the parent folder
+.EXAMPLE
+	PS> ./pull-repos C:\MyRepos
+	⏳ Searching for Git executable...       git version 2.43.0
+	⏳ Checking parent folder...             33 subfolders
+	⏳ Pulling into 'base256U' (1/33)...
+	...
+.LINK
+	https://github.com/fleschutz/PowerShell
+.NOTES
+	Author: Markus Fleschutz | License: CC0
+#>
+
+param([string]$parentDir = "$PWD")
+
+try {
+	$stopWatch = [system.diagnostics.stopwatch]::startNew()
+
+	Write-Host "⏳ Searching for Git executable...`t`t" -noNewline
+	& git --version
+	if ($lastExitCode -ne 0) { throw "Can't execute 'git' - make sure Git is installed and available" }
+
+	Write-Host "⏳ Checking parent folder...`t`t`t" -noNewline
+	if (-not(Test-Path "$parentDir" -pathType container)) { throw "Can't access folder: $parentDir" }
+	$folders = (Get-ChildItem "$parentDir" -attributes Directory)
+	$numFolders = $folders.Count
+	$parentDirName = (Get-Item "$parentDir").Name
+	Write-Host "$parentDir with $numFolders subfolders"
+
+	[int]$step = 1
+	[int]$numFailed = 0
+	foreach ($folder in $folders) {
+		$folderName = (Get-Item "$folder").Name
+		Write-Host "⏳ Pulling into 📂$($folderName)...`t`t`t($step/$($numFolders)) " -noNewline
+
+		& git -C "$folder" pull --recurse-submodules=yes
+		if ($lastExitCode -ne 0) { $numFailed++; Write-Warning "'git pull' failed with exit code $lastExitCode" }
+
+		& git -C "$folder" submodule update --init --recursive
+		if ($lastExitCode -ne 0) { $numFailed++; Write-Warning "'git submodule update' failed with exit code $lastExitCode" }
+		$step++
+	}
+	[int]$elapsed = $stopWatch.Elapsed.TotalSeconds
+	if ($numFailed -eq 0) {
+		"✅ $numFolders Git repos updated at $parentDir in $($elapsed)s."
+		exit 0 # success
+	} else {
+		"⚠️ $numFolders Git repos updated at $parentDir but $numFailed FAILED (took $($elapsed)s)"
+		exit 1
+	}
+} catch {
+	"⚠️ ERROR: $($Error[0]) (script line $($_.InvocationInfo.ScriptLineNumber))"
+	exit 1
+}

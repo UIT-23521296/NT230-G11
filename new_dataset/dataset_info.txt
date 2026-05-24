@@ -1,0 +1,25 @@
+NEW POWERSHELL DATASET
+==================================================
+
+Total Malicious: 309
+Total Benign:    713
+
+Sources:
+  [Malicious] PowerSploit - 43 scripts
+    Bộ công cụ tấn công PowerShell (code execution, persistence, recon)
+
+  [Malicious] Nishang - 89 scripts
+    Framework PowerShell cho offensive security & pentesting
+
+  [Malicious] Invoke-Obfuscation - 15 scripts
+    Công cụ obfuscation PowerShell (mã hóa/che giấu lệnh)
+
+  [Malicious] Empire-PowerShell - 162 scripts
+    Framework C2 (Command & Control) sử dụng PowerShell agents
+
+  [Benign] fleschutz-PowerShell - 680 scripts
+    600+ script quản trị hệ thống, tự động hóa, tiện ích
+
+  [Benign] PSSysadminToolkit - 33 scripts
+    Toolkit PowerShell cho system administrator
+

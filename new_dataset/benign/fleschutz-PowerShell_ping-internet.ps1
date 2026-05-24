@@ -1,0 +1,58 @@
+﻿<#
+.SYNOPSIS
+	Measures the latency to Internet hosts
+.DESCRIPTION
+	This PowerShell script measures the ping roundtrip times from the local computer to 10 Internet servers.
+.PARAMETER hosts
+	Specifies the hosts to ping, seperated by commata (10 popular Internet servers by default)
+.EXAMPLE
+	PS> ./ping-internet.ps1
+	✅ Internet ping at 12ms (9...18ms range, excellent)
+.LINK
+	https://github.com/fleschutz/PowerShell
+.NOTES
+	Author: Markus Fleschutz | License: CC0
+#>
+
+param([string]$hosts = "bing.com,cnn.com,dropbox.com,github.com,google.com,ibm.com,live.com,meta.com,x.com,youtube.com")
+
+try {
+	$hostsArray = $hosts.Split(",")
+	$tasks = $hostsArray | foreach { (New-Object Net.NetworkInformation.Ping).SendPingAsync($_,1000) }
+	[int]$min = 9999999
+	[int]$max = [int]$avg = [int]$success = 0
+	[int]$total = $hostsArray.Count
+	[Threading.Tasks.Task]::WaitAll($tasks)
+	foreach($ping in $tasks.Result) {
+		if ($ping.Status -ne "Success") { continue }
+		$success++
+		[int]$latency = $ping.RoundtripTime
+		$avg += $latency
+		if ($latency -lt $min) { $min = $latency }
+		if ($latency -gt $max) { $max = $latency }
+	}
+	if ($success -eq 0) {
+		Write-Host "⚠️ No Internet (100% ping loss)"
+		exit 1
+	}
+	if ($success -ne $total) {
+		[int]$loss = $total - $success
+		[float]$speed = [math]::round([float]$avg / [float]$success, 1)
+		Write-Host "⚠️ Internet with $loss/$total ping loss and $($speed)ms latency ($($min)...$($max)ms range)"
+		exit 1
+	}
+	[float]$speed = [math]::round([float]$avg / [float]$success, 1)
+	if ($speed -lt 50) {
+		Write-Host "✅ Internet ping at $($speed)ms ($min...$($max)ms range, excellent)"
+	} elseif ($speed -lt 100) {
+		Write-Host "✅ Internet ping at $($speed)ms ($min...$($max)ms range, good)"
+	} elseif ($speed -lt 200) {
+		Write-Host "✅ Internet ping at $($speed)ms ($min...$($max)ms range, fair)"
+	} else {
+		Write-Host "✅ Internet ping at $($speed)ms ($min...$($max)ms range, slow)"
+	}
+	exit 0 # success
+} catch {
+	"⚠️ ERROR: $($Error[0]) (script line $($_.InvocationInfo.ScriptLineNumber))"
+	exit 1
+}

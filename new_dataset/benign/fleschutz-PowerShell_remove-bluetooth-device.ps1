@@ -1,0 +1,66 @@
+﻿<#
+.SYNOPSIS
+	Removes a Bluetooth device
+.DESCRIPTION
+	This PowerShell script removes a Bluetooth device from the local computer.
+.EXAMPLE
+	PS> ./remove-bluetooth-device.ps1
+	...
+	✅ Bluetooth device 'G3' removed.
+.LINK
+	https://github.com/fleschutz/PowerShell
+.NOTES
+	Author: Markus Fleschutz | License: CC0
+#>
+
+$Source = @"
+	[DllImport("BluetoothAPIs.dll", SetLastError = true, CallingConvention = CallingConvention.StdCall)]
+	[return: MarshalAs(UnmanagedType.U4)]
+	static extern UInt32 BluetoothRemoveDevice(IntPtr pAddress);
+	public static UInt32 Unpair(UInt64 BTAddress) {
+		GCHandle pinnedAddr = GCHandle.Alloc(BTAddress, GCHandleType.Pinned);
+		IntPtr pAddress     = pinnedAddr.AddrOfPinnedObject();
+		UInt32 result       = BluetoothRemoveDevice(pAddress);
+		pinnedAddr.Free();
+		return result;
+	}
+"@
+
+function GetBluetoothDevices {
+	Get-PnpDevice -class Bluetooth |
+		?{$_.HardwareID -match 'DEV_'} |
+			select Status, Class, FriendlyName, HardwareID,
+				# Extract device address from HardwareID
+				@{N='Address';E={[uInt64]('0x{0}' -f $_.HardwareID[0].Substring(12))}}
+}
+
+try {
+	"⏳ Querying Bluetooth devices..."
+	$BTR       = Add-Type -MemberDefinition $Source -Name "BTRemover"  -Namespace "BStuff" -PassThru
+	$devices = @(GetBluetoothDevices) # Force array if null or single item
+	if ($devices.Count -eq 0) { throw "No Bluetooth devices found" }
+
+	do {
+		if ($devices.Count) {
+			for ($i=0; $i -lt $devices.Count; $i++) {
+				("   ({0}) '{1}' device ({2}/{3}/{4})" -f ($i+1), $devices[$i].FriendlyName, $devices[$i].Status, $devices[$i].Class, $devices[$i].Address) | Write-Host
+			}
+			$selected = Read-Host "`n   Please select a device to remove (0=exit)"
+			If ([int]$selected -in 1..$devices.Count) {
+				"⏳ Removing '{0}' device..." -f $devices[$selected-1].FriendlyName | Write-Host
+				$result = $BTR::Unpair($devices[$selected-1].Address)
+				If (!$result) {
+					"✅ Bluetooth device '$($devices[$selected-1].FriendlyName)' removed."
+				} Else {
+					("Sorry, an error occured. Return was: {0}" -f $result) | Write-Host
+				}
+			}
+		} else {
+			"No more Bluetooth devices found"
+		}
+	} while (($devices = @(GetBluetoothDevices)) -and [int]$selected)
+	exit 0 # success
+} catch {
+	"⚠️ ERROR: $($Error[0]) (script line $($_.InvocationInfo.ScriptLineNumber))"
+	exit 1
+}

@@ -1,0 +1,12 @@
+*.pdf
+walkthrough.md
+_clone_temp/
+__pycache__/
+.env
+.venv
+env/
+venv/
+*.pyc
+results/*.model*
+results/*.npy
+results/*.pkl

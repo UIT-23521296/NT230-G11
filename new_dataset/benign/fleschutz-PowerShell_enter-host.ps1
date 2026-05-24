@@ -1,0 +1,47 @@
+﻿<#
+.SYNOPSIS
+	Enter another host via SSH
+.DESCRIPTION
+	This PowerShell script logs into a remote host via secure shell (SSH).
+.PARAMETER remoteHost
+	Specifies the remote hostname or IP address
+.EXAMPLE
+	PS> ./enter-host.ps1 tux
+	⏳ Pinging... 'Laptop' ---0.5ms---> 'tux' (IP 192.168.1.179)
+	⏳ Login...   user 'markus', OpenSSH_for_Windows_9.5p2, LibreSSL 3.8.2
+	...
+.LINK
+	https://github.com/fleschutz/PowerShell
+.NOTES
+	Author: Markus Fleschutz | License: CC0
+#>
+
+param([string]$remoteHost = "")
+
+try {
+	if ($remoteHost -eq "") {
+		$remoteHost = Read-Host "Enter the remote hostname or IP address"
+		$remoteUser = Read-Host "Enter your username at $remoteHost"
+	} elseif ($IsLinux) {
+		$remoteUser = $(whoami)
+	} else {
+		$remoteUser = $env:USERNAME
+		$remoteUser = $remoteUser.toLower()
+	}
+
+	& "$PSScriptRoot/ping-host.ps1" $remoteHost
+	if ($lastExitCode -ne 0) {
+		Write-Host "Maybe '$remoteHost' is sleeping, let's try Wake-On-LAN (WOL)..."
+		& "$PSScriptRoot/wake-up-host.ps1" $remoteHost 
+	}
+
+	Write-Host "⏳ Login...    user '$remoteUser', " -noNewline
+	& ssh -V
+	if ($lastExitCode -ne 0) { throw "'ssh -V' failed with exit code $lastExitCode" }
+
+	& ssh "$($remoteUser)@$($remoteHost)"
+	exit 0 # success
+} catch {
+	"⚠️ ERROR: $($Error[0]) (in script line $($_.InvocationInfo.ScriptLineNumber))"
+	exit 1
+}
