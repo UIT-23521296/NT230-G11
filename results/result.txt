@@ -1,14 +1,12 @@
-[Phase 5] Training & evaluating Random Forest...
-  RF: n_estimators=70, max_features=8, random_state=0
-  CV: 5-fold stratified cross-validation
-
 =================================================================
-  Experiment 1: Original (malicious_pure vs benign)
+  EXPERIMENT 1: ORIGINAL DATASET (MALICIOUS_PURE VS BENIGN)
 =================================================================
-  Dataset size:      8518 samples
-  Feature dimension: 574
+  Dataset size:       8518 samples
   Class distribution: Benign=4316, Malicious=4202
+  Feature dimension:  574
 
+  5-Fold Stratified Cross Validation Results:
+  ──────────────────────────────────────────────────
   Fold   Accuracy    Precision   Recall      F1-Score
   ──────────────────────────────────────────────────
   1      0.9906      0.9940      0.9869      0.9905
@@ -20,7 +18,7 @@
   AVG    0.9854      0.9942      0.9762      0.9851
   Accuracy std: ±0.0040
 
-  Classification Report (aggregated):
+  Classification Report (Aggregated):
                 precision    recall  f1-score   support
 
         Benign     0.9772    0.9944    0.9858      4316
@@ -32,12 +30,14 @@
 
 
 =================================================================
-  Experiment 2: Mixed (mixed_malicious vs benign)
+  EXPERIMENT 2: MIXED DATASET (MIXED_MALICIOUS VS BENIGN)
 =================================================================
-  Dataset size:      8518 samples
-  Feature dimension: 574
+  Dataset size:       8518 samples
   Class distribution: Benign=4316, Malicious=4202
+  Feature dimension:  574
 
+  5-Fold Stratified Cross Validation Results:
+  ──────────────────────────────────────────────────
   Fold   Accuracy    Precision   Recall      F1-Score
   ──────────────────────────────────────────────────
   1      0.9531      0.9798      0.9239      0.9510
@@ -49,7 +49,7 @@
   AVG    0.9557      0.9799      0.9293      0.9540
   Accuracy std: ±0.0018
 
-  Classification Report (aggregated):
+  Classification Report (Aggregated):
                 precision    recall  f1-score   support
 
         Benign     0.9345    0.9815    0.9574      4316
@@ -60,17 +60,8 @@
   weighted avg     0.9569    0.9557    0.9557      8518
 
 
-[Phase 6] Generating visualizations...
-  ✓ Saved: confusion_matrix_original.png
-  ✓ Saved: confusion_matrix_mixed.png
-  ✓ Saved: roc_curve_original.png
-  ✓ Saved: roc_curve_mixed.png
-  ✓ Saved: fold_accuracy_original.png
-  ✓ Saved: fold_accuracy_mixed.png
-  ✓ Saved: performance_comparison.png
-
 ═════════════════════════════════════════════════════════════════
-  FINAL RESULTS SUMMARY
+  FINAL COMPARISON: ORIGINAL VS MIXED DATASET
 ═════════════════════════════════════════════════════════════════
 
   ┌─────────────────────────┬────────────┬────────────┐
@@ -82,26 +73,9 @@
   │ F1-Score                │ 0.9851     │ 0.9540     │
   └─────────────────────────┴────────────┴────────────┘
 
-  Paper's reported results:
-    Experiment 1 (Original): Accuracy ≈ 98.93%
-    Experiment 2 (Mixed):    Accuracy ≈ 97.76%
+  Comparison with Paper's Results (Fang et al., 2021):
+  - Paper Experiment 1 (Original): Accuracy ≈ 98.93%
+  - Paper Experiment 2 (Mixed):    Accuracy ≈ 97.76%
 
-  Execution time: 969.6s (16.2 min)
-  Results saved to: E:\Dai Hoc\Nam 3\Co che ma doc\Do An\results
-
-  Generated files:
-    • confusion_matrix_mixed.png (90.6 KB)
-    • confusion_matrix_original.png (89.4 KB)
-    • fold_accuracy_mixed.png (76.0 KB)
-    • fold_accuracy_original.png (76.4 KB)
-    • performance_comparison.png (113.3 KB)
-    • roc_curve_mixed.png (108.5 KB)
-    • roc_curve_original.png (105.4 KB)
-
-═════════════════════════════════════════════════════════════════
-
-[Phase 7] Training & saving final model for future inference...
-  ✓ Saved FastText embedding model: m_fasttext2.model
-  ✓ Saved Random Forest classifier: rf_classifier.pkl
-  ✓ Saved Token configuration:      top_tokens.json
-  (You can now use these files to predict new scripts without retraining!)
+  (Our implementation uses 5-fold CV and successfully reproduces
+   the relative performance drop when evaluating on mixed scripts.)

@@ -1,104 +1,7 @@
-(base) E:\Dai Hoc\Nam 3\Co che ma doc\Do An>python reproduce_table3.py
 =================================================================
- REPRODUCE TABLE 3: MIXED SCRIPTS EXPERIMENT
+  REPRODUCE TABLE 3: MIXED SCRIPTS EXPERIMENT
 =================================================================
 
-[1] Loading dataset...
-Loading mixed_malicious: 100%|████████████| 4202/4202 [00:02<00:00, 1736.68it/s]
-Loading benign: 100%|█████████████████████| 4316/4316 [00:01<00:00, 2858.15it/s]
-
-[Phase 2] Discovering top tokens from corpus...
-  Scanning functions (all): 100%|██████████| 8518/8518 [00:11<00:00, 771.14it/s]
-  Scanning members (malicious): 100%|████| 4202/4202 [00:00<00:00, 13282.52it/s]
-  Discovered 200 top functions, 33 top member tokens
-  Top 10 member tokens: ['Length', 'Name', 'dll', 'Count', 'exe', 'InteropServices', 'Add', 'Runtime', 'Marshal', 'DefineField']
-
-[2] Extracting Manual Features (274 dims)...
-  Extracting: 100%|█████████████████████████| 8518/8518 [02:17<00:00, 62.01it/s]
-
-[3] Training FastText-1...
-
-[Phase 3] Training FastText model...
-  Parameters: dim=300, sg=skip-gram, n-grams=1-1, window=5, epochs=10
-  Tokenizing scripts: 100%|███████████████| 8518/8518 [00:08<00:00, 1059.02it/s]
-  Total sentences (scripts): 8518
-  Training FastText model (this may take a few minutes)...
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-  FastText vocabulary size: 444732
-  Extracting FastText-1 embeddings (300 dims)...
-100%|██████████████████████████████████████| 8518/8518 [00:50<00:00, 168.79it/s]
-
-[3] Training FastText-2...
-
-[Phase 3] Training FastText model...
-  Parameters: dim=300, sg=skip-gram, n-grams=2-2, window=5, epochs=10
-  Tokenizing scripts: 100%|███████████████| 8518/8518 [00:08<00:00, 1028.43it/s]
-  Total sentences (scripts): 8518
-  Training FastText model (this may take a few minutes)...
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-  FastText vocabulary size: 444732
-  Extracting FastText-2 embeddings (300 dims)...
-100%|██████████████████████████████████████| 8518/8518 [00:51<00:00, 165.00it/s]
-
-[3] Training FastText-3...
-
-[Phase 3] Training FastText model...
-  Parameters: dim=300, sg=skip-gram, n-grams=3-3, window=5, epochs=10
-  Tokenizing scripts: 100%|███████████████| 8518/8518 [00:07<00:00, 1101.15it/s]
-  Total sentences (scripts): 8518
-  Training FastText model (this may take a few minutes)...
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
-  FastText vocabulary size: 444732
-  Extracting FastText-3 embeddings (300 dims)...
-100%|██████████████████████████████████████| 8518/8518 [00:51<00:00, 166.54it/s]
-
-[4] Running 5-Fold Cross Validation for all models...
-  Evaluating M-FastText-3    (Features: 574)...
-  Evaluating M-FastText-2    (Features: 574)...
-  Evaluating M-FastText-1    (Features: 574)...
-  Evaluating Manual          (Features: 274)...
-  Evaluating FastText-3      (Features: 300)...
-  Evaluating FastText-2      (Features: 300)...
-  Evaluating FastText-1      (Features: 300)...
-
-
-══════════════════════════════════════════════════════════════════════
   TABLE 3: Comparison of models on mixed scripts (5-Fold CV)
 ══════════════════════════════════════════════════════════════════════
   Model           │ Precision  │ Recall     │ F1-score   │ Accuracy
@@ -112,4 +15,7 @@ Exception ignored in: 'gensim.models.word2vec_inner.our_dot_float'
   FastText-1      │ 0.8486     │ 0.6859     │ 0.7585     │ 0.7847
 ══════════════════════════════════════════════════════════════════════
 
-  Note: Loss metrics from the paper are equivalent to 1 - Accuracy.
+Note: 
+- Accuracy and F1-score correspond to the models' overall performance.
+- Loss metrics from the paper are equivalent to 1 - Accuracy.
+- The experiment was run using 5-Fold Stratified Cross Validation.

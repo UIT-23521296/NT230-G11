@@ -11,7 +11,7 @@ Tất cả dữ liệu được thu thập từ các repository **công khai và
 ### 2.1. Dữ liệu mã độc (Malicious)
 
 | # | Repository | Số lượng | Mô tả | URL |
-|---|-----------|----------|-------|-----|
+|---|------------|----------|-------|-----|
 | 1 | **PowerSploit** | 43 scripts | Bộ công cụ tấn công PowerShell nổi tiếng, gồm các module cho code execution, persistence, recon | https://github.com/PowerShellMafia/PowerSploit |
 | 2 | **Nishang** | 89 scripts | Framework PowerShell cho offensive security và penetration testing | https://github.com/samratashok/nishang |
 | 3 | **Invoke-Obfuscation** | 15 scripts | Công cụ obfuscation (mã hóa/che giấu) lệnh PowerShell, dùng để qua mặt hệ thống phát hiện | https://github.com/danielbohannon/Invoke-Obfuscation |
