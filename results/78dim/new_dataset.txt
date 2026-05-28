@@ -1,0 +1,40 @@
+=================================================================
+  EVALUATION RESULTS ON NEW DATASET
+=================================================================
+  Total samples:  1022
+  Malicious:      309
+  Benign:         713
+
+  ┌───────────────────┬────────────┐
+  │ Metric            │   Score    │
+  ├───────────────────┼────────────┤
+  │ Accuracy          │  0.7769    │
+  │ Precision         │  0.9880    │
+  │ Recall            │  0.2654    │
+  │ F1-Score          │  0.4184    │
+  └───────────────────┴────────────┘
+
+  Confusion Matrix:
+                    Predicted
+                  Benign  Malicious
+  True Benign       712       1
+  True Malicious    227      82
+
+  Classification Report:
+                precision    recall  f1-score   support
+
+        Benign     0.7583    0.9986    0.8620       713
+     Malicious     0.9880    0.2654    0.4184       309
+
+      accuracy                         0.7769      1022
+     macro avg     0.8731    0.6320    0.6402      1022
+  weighted avg     0.8277    0.7769    0.7279      1022
+
+=================================================================
+  FINAL SUMMARY
+=================================================================
+
+  Key results:
+    Accuracy:  0.7769 (77.69%)
+    AUC:       0.7770
+    F1-Score:  0.4184

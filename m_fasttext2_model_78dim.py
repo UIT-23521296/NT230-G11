@@ -41,6 +41,7 @@ except ImportError:
 
 from gensim.models import FastText as GensimFastText
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
@@ -63,7 +64,7 @@ DATASET_DIR = os.path.join(BASE_DIR, "mpsd")
 MALICIOUS_DIR = os.path.join(DATASET_DIR, "malicious_pure")
 MIXED_DIR = os.path.join(DATASET_DIR, "mixed_malicious")
 BENIGN_DIR = os.path.join(DATASET_DIR, "powershell_benign_dataset")
-RESULTS_DIR = os.path.join(BASE_DIR, "results", "574dim")
+RESULTS_DIR = os.path.join(BASE_DIR, "results", "78dim")
 
 # FastText Parameters (Section 3.3.3 & 4.3)
 FASTTEXT_DIM = 300          # Word vector dimension: 300
@@ -267,10 +268,12 @@ def extract_textual_features(script):
     # 5. URL/IP existence (1 feature)
     features.append(detect_url_ip(script))
 
-    # 6. Special variable names count (1 feature)
+    # 6. Special variable names count (2 features: total vars, special vars)
+    total_vars = len(re.findall(r'\$[A-Za-z_]\w*', script))
+    features.append(total_vars)
     features.append(count_special_variables(script))
 
-    return features  # Total: 12 features
+    return features  # Total: 13 features
 
 
 # ============================================================
@@ -311,16 +314,17 @@ def extract_member_accesses(script):
     return all_members
 
 
-def discover_top_tokens(malicious_scripts, all_scripts,
+def discover_top_tokens(malicious_scripts, benign_scripts, all_scripts,
                         k_functions=200, k_members=33):
     """
     First pass: discover the top-K most frequent tokens from the corpus.
 
-    - Top 200 functions: extracted from ALL scripts, ranked by frequency
+    - Top 200 functions: extracted from ALL scripts, ranked by frequency. 
+      Then scored +1 (more in mal) or -1 (more in ben).
     - Top 33 member tokens: extracted from MALICIOUS scripts only,
       representing the most characteristic member access patterns in malware
 
-    Returns: (top_functions_list, top_members_list)
+    Returns: (top_functions_scores, top_members_list)
     """
     print("\n[Phase 2] Discovering top tokens from corpus...")
 
@@ -331,6 +335,25 @@ def discover_top_tokens(malicious_scripts, all_scripts,
         func_counter.update(funcs)
 
     top_functions = [func for func, _ in func_counter.most_common(k_functions)]
+    
+    # Calculate +1/-1 scores for top 200 functions
+    mal_func_counter = Counter()
+    for script in malicious_scripts:
+        mal_func_counter.update(extract_function_calls(script))
+        
+    ben_func_counter = Counter()
+    for script in benign_scripts:
+        ben_func_counter.update(extract_function_calls(script))
+        
+    top_functions_scores = {}
+    for func in top_functions:
+        mal_count = mal_func_counter.get(func, 0)
+        ben_count = ben_func_counter.get(func, 0)
+        
+        if mal_count > ben_count:
+            top_functions_scores[func] = 1
+        else:
+            top_functions_scores[func] = -1
 
     # Discover top member tokens from MALICIOUS scripts only
     member_counter = Counter()
@@ -341,32 +364,33 @@ def discover_top_tokens(malicious_scripts, all_scripts,
 
     top_members = [member for member, _ in member_counter.most_common(k_members)]
 
-    print(f"  Discovered {len(top_functions)} top functions, "
+    print(f"  Discovered {len(top_functions)} top functions (scored), "
           f"{len(top_members)} top member tokens")
     if top_members:
         print(f"  Top 10 member tokens: {top_members[:10]}")
 
-    return top_functions, top_members
+    return top_functions_scores, top_members
 
 
-def extract_token_features(script, top_functions, top_members):
+def extract_token_features(script, top_functions_scores, top_members):
     """
     Extract token features as described in Section 3.2.2.
 
-    - Top 200 functions scoring: count of each function in the script
-      (200 features)
+    - Top 200 functions scoring: total rating (1 feature)
     - Top 33 member tokens: distribution ratio of each member token
       relative to total member accesses (33 features)
 
-    Returns: 233-dimensional feature vector
+    Returns: 34-dimensional feature vector
     """
     features = []
 
-    # --- Top 200 Functions Scoring ---
+    # --- Top 200 Functions Scoring (Total Rating) ---
     script_funcs = extract_function_calls(script)
-    func_counts = Counter(script_funcs)
-    for func in top_functions:
-        features.append(func_counts.get(func, 0))
+    total_rating = 0
+    for func in script_funcs:
+        if func in top_functions_scores:
+            total_rating += top_functions_scores[func]
+    features.append(total_rating)
 
     # --- Top 33 Member Tokens Distribution Ratio ---
     script_members = extract_member_accesses(script)
@@ -379,7 +403,7 @@ def extract_token_features(script, top_functions, top_members):
         else:
             features.append(0.0)
 
-    return features  # Total: 200 + 33 = 233 features
+    return features  # Total: 1 + 33 = 34 features
 
 
 # ============================================================
@@ -592,12 +616,12 @@ def extract_all_features(scripts, fasttext_model, top_functions, top_members,
     Extract all hybrid features for a list of scripts.
 
     For each script, concatenates:
-      - FastText embedding (300 dim)
-      - Textual features (12 dim)
-      - Token features (233 dim)
+      - FastText embedding (300 dim - will be reduced to 2 dim in CV)
+      - Textual features (13 dim)
+      - Token features (34 dim)
       - AST features (29 dim)
 
-    Total: 574-dimensional feature vector per script
+    Total returned: 376-dimensional feature vector per script (FastText simulated to 2D later)
     """
     all_features = []
 
@@ -605,10 +629,10 @@ def extract_all_features(scripts, fasttext_model, top_functions, top_members,
         # FastText embedding (300 dim)
         embedding = get_script_embedding(script, fasttext_model)
 
-        # Textual features (12 dim) - Section 3.2.1
+        # Textual features (13 dim) - Section 3.2.1
         textual = extract_textual_features(script)
 
-        # Token features (233 dim) - Section 3.2.2
+        # Token features (34 dim) - Section 3.2.2
         token = extract_token_features(script, top_functions, top_members)
 
         # AST features (29 dim) - Section 3.2.3
@@ -671,19 +695,41 @@ def run_experiment(X, y, experiment_name="Experiment"):
     for fold, (train_idx, test_idx) in enumerate(skf.split(X, y), 1):
         X_train, X_test = X[train_idx], X[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
+        
+        # --- Simulate FastText Supervised Output (300D -> 2D) ---
+        X_train_ft = X_train[:, :FASTTEXT_DIM]
+        X_train_manual = X_train[:, FASTTEXT_DIM:]
+        
+        X_test_ft = X_test[:, :FASTTEXT_DIM]
+        X_test_manual = X_test[:, FASTTEXT_DIM:]
+        
+        # Train FastText simulated classifier (Logistic Regression) on embeddings
+        ft_clf = LogisticRegression(random_state=RF_RANDOM_STATE, max_iter=1000)
+        ft_clf.fit(X_train_ft, y_train)
+        
+        # Get 2D features: Predict label, predict proba
+        y_train_ft_pred = ft_clf.predict(X_train_ft).reshape(-1, 1)
+        y_train_ft_proba = ft_clf.predict_proba(X_train_ft)[:, 1].reshape(-1, 1)
+        
+        y_test_ft_pred = ft_clf.predict(X_test_ft).reshape(-1, 1)
+        y_test_ft_proba = ft_clf.predict_proba(X_test_ft)[:, 1].reshape(-1, 1)
+        
+        # Combine 2D FastText features with 76D manual features = 78D
+        X_train_final = np.hstack([y_train_ft_pred, y_train_ft_proba, X_train_manual])
+        X_test_final = np.hstack([y_test_ft_pred, y_test_ft_proba, X_test_manual])
 
-        # Train Random Forest with exact paper parameters
+        # Train Random Forest with exact paper parameters on 78D features
         clf = RandomForestClassifier(
             n_estimators=RF_N_ESTIMATORS,
             max_features=RF_MAX_FEATURES,
             random_state=RF_RANDOM_STATE,
             n_jobs=-1,
         )
-        clf.fit(X_train, y_train)
+        clf.fit(X_train_final, y_train)
 
         # Predict
-        y_pred = clf.predict(X_test)
-        y_proba = clf.predict_proba(X_test)[:, 1]
+        y_pred = clf.predict(X_test_final)
+        y_proba = clf.predict_proba(X_test_final)[:, 1]
 
         # Metrics
         acc = accuracy_score(y_test, y_pred)
@@ -968,19 +1014,27 @@ def main():
     # Phase 2: Discover Top Tokens (Section 3.2.2)
     # ================================================================
     all_scripts_for_tokens = malicious_scripts_clean + benign_scripts_clean
-    top_functions, top_members = discover_top_tokens(
+    top_functions_scores, top_members = discover_top_tokens(
         malicious_scripts_clean,
+        benign_scripts_clean,
         all_scripts_for_tokens,
         k_functions=TOP_K_FUNCTIONS,
         k_members=TOP_K_MEMBERS,
     )
+    
+    # Save tokens definition (scores for functions, list for members)
+    tokens_path = os.path.join(RESULTS_DIR, "top_tokens_78dim.json")
+    with open(tokens_path, 'w', encoding='utf-8') as f:
+        json.dump({
+            "top_functions_scores": top_functions_scores,
+            "top_members": top_members
+        }, f)
+    print(f"  ✓ Saved token definitions to {tokens_path}")
 
     # ================================================================
     # Phase 3: Train FastText (Section 3.3.3)
     # ================================================================
-    all_corpus = (malicious_scripts_clean + mixed_scripts_clean +
-                  benign_scripts_clean)
-    fasttext_model = train_fasttext_model(all_corpus)
+    fasttext_model = train_fasttext_model(all_scripts_for_tokens)
 
     # ================================================================
     # Phase 4: Extract Hybrid Features
@@ -989,46 +1043,42 @@ def main():
 
     # --- Experiment 1: Original Dataset ---
     print("\n  ── Experiment 1: Original Dataset ──")
-    mal_features = extract_all_features(
-        malicious_scripts_clean, fasttext_model,
-        top_functions, top_members,
-        desc="  Features (malicious_pure)"
-    )
-    ben_features = extract_all_features(
-        benign_scripts_clean, fasttext_model,
-        top_functions, top_members,
-        desc="  Features (benign)"
-    )
+    X_orig_mal = extract_all_features(malicious_scripts_clean, fasttext_model,
+                                      top_functions_scores, top_members,
+                                      desc="  Extracting malicious")
+    X_orig_ben = extract_all_features(benign_scripts_clean, fasttext_model,
+                                      top_functions_scores, top_members,
+                                      desc="  Extracting original benign")
 
-    X_original = np.vstack([mal_features, ben_features])
+    X_original = np.vstack([X_orig_mal, X_orig_ben])
     y_original = np.array(
-        [1] * len(mal_features) + [0] * len(ben_features)
+        [1] * len(X_orig_mal) + [0] * len(X_orig_ben)
     )
     print(f"  Original dataset shape: {X_original.shape}")
 
     # --- Experiment 2: Mixed Dataset ---
     print("\n  ── Experiment 2: Mixed Dataset ──")
-    mix_features = extract_all_features(
+    X_mix_mal = extract_all_features(
         mixed_scripts_clean, fasttext_model,
-        top_functions, top_members,
+        top_functions_scores, top_members,
         desc="  Features (mixed_malicious)"
     )
 
-    X_mixed = np.vstack([mix_features, ben_features])
+    X_mixed = np.vstack([X_mix_mal, X_orig_ben])
     y_mixed = np.array(
-        [1] * len(mix_features) + [0] * len(ben_features)
+        [1] * len(X_mix_mal) + [0] * len(X_orig_ben)
     )
     print(f"  Mixed dataset shape: {X_mixed.shape}")
 
     # Feature dimension summary
-    feat_dim = X_original.shape[1]
+    feat_dim = 78
     print(f"\n  Feature Vector Breakdown (per script):")
     print(f"  ┌──────────────────────────────┬──────┐")
-    print(f"  │ FastText embedding (300d)     │  300 │")
-    print(f"  │ Textual features (§3.2.1)     │   12 │")
-    print(f"  │ Token features (§3.2.2)       │  233 │")
-    print(f"  │   └─ Top 200 functions        │  200 │")
-    print(f"  │   └─ Top 33 member tokens     │   33 │")
+    print(f"  │ FastText (simulated output)   │    2 │")
+    print(f"  │ Textual features (§3.2.1)     │   13 │")
+    print(f"  │ Token features (§3.2.2)       │   34 │")
+    print(f"  │   └─ Total functions rating   │    1 │")
+    print(f"  │   └─ Top 33 member ratios     │   33 │")
     print(f"  │ AST features (§3.2.3)         │   29 │")
     print(f"  │   └─ 23 main nodes            │   23 │")
     print(f"  │   └─ 5 special nodes          │    5 │")
@@ -1143,18 +1193,35 @@ def main():
     # ================================================================
     print("\n[Phase 7] Training & saving final model for future inference...")
     
-    # Train final Random Forest on the entire original dataset
+    # Simulate FastText 2D output for the entire original dataset
+    X_orig_ft = X_original[:, :FASTTEXT_DIM]
+    X_orig_manual = X_original[:, FASTTEXT_DIM:]
+    
+    final_ft_clf = LogisticRegression(random_state=RF_RANDOM_STATE, max_iter=1000)
+    final_ft_clf.fit(X_orig_ft, y_original)
+    
+    y_orig_ft_pred = final_ft_clf.predict(X_orig_ft).reshape(-1, 1)
+    y_orig_ft_proba = final_ft_clf.predict_proba(X_orig_ft)[:, 1].reshape(-1, 1)
+    
+    X_orig_final = np.hstack([y_orig_ft_pred, y_orig_ft_proba, X_orig_manual])
+    
+    # Train final Random Forest on the entire 78D original dataset
     final_rf = RandomForestClassifier(
         n_estimators=RF_N_ESTIMATORS,
         max_features=RF_MAX_FEATURES,
         random_state=RF_RANDOM_STATE,
         n_jobs=-1,
     )
-    final_rf.fit(X_original, y_original)
+    final_rf.fit(X_orig_final, y_original)
     
-    # Save FastText model
+    # Save FastText embedding model
     fasttext_path = os.path.join(RESULTS_DIR, "m_fasttext2.model")
     fasttext_model.save(fasttext_path)
+    
+    # Save simulated FastText Logistic Regression model
+    ft_clf_path = os.path.join(RESULTS_DIR, "ft_classifier.pkl")
+    with open(ft_clf_path, 'wb') as f:
+        pickle.dump(final_ft_clf, f)
     
     # Save Random Forest model
     rf_path = os.path.join(RESULTS_DIR, "rf_classifier.pkl")
@@ -1162,14 +1229,15 @@ def main():
         pickle.dump(final_rf, f)
         
     # Save Top Tokens (needed for feature extraction later)
-    tokens_path = os.path.join(RESULTS_DIR, "top_tokens.json")
+    tokens_path = os.path.join(RESULTS_DIR, "top_tokens_78dim.json")
     with open(tokens_path, 'w') as f:
         json.dump({
-            "top_functions": top_functions,
+            "top_functions_scores": top_functions_scores,
             "top_members": top_members
         }, f)
         
     print(f"  ✓ Saved FastText embedding model: {os.path.basename(fasttext_path)}")
+    print(f"  ✓ Saved FastText simulated classifier: {os.path.basename(ft_clf_path)}")
     print(f"  ✓ Saved Random Forest classifier: {os.path.basename(rf_path)}")
     print(f"  ✓ Saved Token configuration:      {os.path.basename(tokens_path)}")
     print(f"  (You can now use these files to predict new scripts without retraining!)")

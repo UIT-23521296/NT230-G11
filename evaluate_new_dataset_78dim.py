@@ -47,14 +47,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Import feature extraction functions from main model
-import m_fasttext2_model as core
+import m_fasttext2_model_78dim as core
 
 # ============================================================
 # CONFIGURATION
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-RESULTS_DIR = os.path.join(BASE_DIR, "results", "574dim")
+RESULTS_DIR = os.path.join(BASE_DIR, "results", "78dim")
 NEW_DATASET_DIR = os.path.join(BASE_DIR, "new_dataset")
 NEW_MAL_DIR = os.path.join(NEW_DATASET_DIR, "malicious")
 NEW_BEN_DIR = os.path.join(NEW_DATASET_DIR, "benign")
@@ -90,8 +90,17 @@ def load_saved_model():
     print(f"  [OK] Random Forest classifier loaded "
           f"(trees: {rf_model.n_estimators})")
     
+    # Load simulated FastText Logistic Regression model
+    ft_clf_path = os.path.join(RESULTS_DIR, "ft_classifier.pkl")
+    if not os.path.exists(ft_clf_path):
+        print(f"  [ERROR] FT classifier not found: {ft_clf_path}")
+        sys.exit(1)
+    with open(ft_clf_path, 'rb') as f:
+        ft_model = pickle.load(f)
+    print(f"  [OK] Simulated FastText Classifier loaded")
+    
     # Load token config
-    tokens_path = os.path.join(RESULTS_DIR, "top_tokens.json")
+    tokens_path = os.path.join(RESULTS_DIR, "top_tokens_78dim.json")
     if not os.path.exists(tokens_path):
         print(f"  [ERROR] Token config not found: {tokens_path}")
         sys.exit(1)
@@ -99,12 +108,11 @@ def load_saved_model():
     with open(tokens_path, 'r') as f:
         token_config = json.load(f)
     
-    top_functions = token_config["top_functions"]
+    top_functions_scores = token_config["top_functions_scores"]
     top_members = token_config["top_members"]
-    print(f"  [OK] Token config loaded "
-          f"(functions: {len(top_functions)}, members: {len(top_members)})")
+    print(f"  [OK] Token config loaded")
     
-    return fasttext_model, rf_model, top_functions, top_members
+    return fasttext_model, ft_model, rf_model, top_functions_scores, top_members
 
 
 # ============================================================
@@ -147,7 +155,7 @@ def load_new_dataset():
 # EVALUATE ON NEW DATA
 # ============================================================
 
-def evaluate(fasttext_model, rf_model, top_functions, top_members,
+def evaluate(fasttext_model, ft_model, rf_model, top_functions_scores, top_members,
              mal_scripts, ben_scripts):
     """
     Evaluate the trained model on the new dataset.
@@ -158,11 +166,11 @@ def evaluate(fasttext_model, rf_model, top_functions, top_members,
     print("\n[3] Extracting features from new dataset...")
     
     mal_features = core.extract_all_features(
-        mal_scripts, fasttext_model, top_functions, top_members,
+        mal_scripts, fasttext_model, top_functions_scores, top_members,
         desc="  Features (new malicious)"
     )
     ben_features = core.extract_all_features(
-        ben_scripts, fasttext_model, top_functions, top_members,
+        ben_scripts, fasttext_model, top_functions_scores, top_members,
         desc="  Features (new benign)"
     )
     
@@ -172,12 +180,20 @@ def evaluate(fasttext_model, rf_model, top_functions, top_members,
     # Clean NaN/Inf
     X_new = np.nan_to_num(X_new, nan=0.0, posinf=0.0, neginf=0.0)
     
-    print(f"  Feature matrix shape: {X_new.shape}")
+    # Convert 376D to 78D using the ft_model
+    X_new_ft = X_new[:, :core.FASTTEXT_DIM]
+    X_new_manual = X_new[:, core.FASTTEXT_DIM:]
+    y_new_ft_pred = ft_model.predict(X_new_ft).reshape(-1, 1)
+    y_new_ft_proba = ft_model.predict_proba(X_new_ft)[:, 1].reshape(-1, 1)
+    X_new_final = np.hstack([y_new_ft_pred, y_new_ft_proba, X_new_manual])
+    
+    print(f"  Extracted feature matrix shape: {X_new.shape}")
+    print(f"  Final 78D feature matrix shape: {X_new_final.shape}")
     
     # Predict
     print("\n[4] Predicting with trained model...")
-    y_pred = rf_model.predict(X_new)
-    y_proba = rf_model.predict_proba(X_new)[:, 1]
+    y_pred = rf_model.predict(X_new_final)
+    y_proba = rf_model.predict_proba(X_new_final)[:, 1]
     
     # Metrics
     acc = accuracy_score(y_true, y_pred)
@@ -359,7 +375,7 @@ def main():
     start_time = time.time()
     
     # Step 1: Load model
-    fasttext_model, rf_model, top_functions, top_members = load_saved_model()
+    fasttext_model, ft_model, rf_model, top_functions_scores, top_members = load_saved_model()
     
     # Step 2: Load new data
     mal_scripts, ben_scripts = load_new_dataset()
@@ -371,8 +387,8 @@ def main():
     
     # Step 3-4: Evaluate
     results = evaluate(
-        fasttext_model, rf_model,
-        top_functions, top_members,
+        fasttext_model, ft_model, rf_model,
+        top_functions_scores, top_members,
         mal_scripts, ben_scripts
     )
     

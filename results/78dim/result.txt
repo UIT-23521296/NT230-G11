@@ -1,0 +1,38 @@
+=================================================================
+  M-FastText-2 ORIGINAL MODEL (78 Dimensions)
+=================================================================
+  Dataset size: 8518 scripts (Benign=4316, Malicious=4202)
+  Cross-Validation: 5-fold stratified
+  Classifier: Random Forest (n_estimators=70, max_features=8)
+
+  Feature Vector Breakdown:
+  ┌──────────────────────────────┬──────┐
+  │ FastText (simulated output)   │    2 │
+  │ Textual features (§3.2.1)     │   13 │
+  │ Token features (§3.2.2)       │   34 │
+  │   └─ Total functions rating   │    1 │
+  │   └─ Top 33 member ratios     │   33 │
+  │ AST features (§3.2.3)         │   29 │
+  │   └─ 23 main nodes            │   23 │
+  │   └─ 5 special nodes          │    5 │
+  │   └─ AST depth                │    1 │
+  ├──────────────────────────────┼──────┤
+  │ TOTAL                         │   78 │
+  └──────────────────────────────┴──────┘
+
+=================================================================
+  FINAL RESULTS SUMMARY
+=================================================================
+
+  ┌─────────────────────────┬────────────┬────────────┐
+  │ Metric                  │  Original  │   Mixed    │
+  ├─────────────────────────┼────────────┼────────────┤
+  │ Accuracy                │ 0.9881     │ 0.9573     │
+  │ Precision               │ 0.9909     │ 0.9739     │
+  │ Recall                  │ 0.9850     │ 0.9386     │
+  │ F1-Score                │ 0.9879     │ 0.9559     │
+  └─────────────────────────┴────────────┴────────────┘
+
+  Paper's reported results (for reference):
+    Experiment 1 (Original): Accuracy ≈ 98.93%
+    Experiment 2 (Mixed):    Accuracy ≈ 97.76%
