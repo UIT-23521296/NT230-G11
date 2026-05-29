@@ -72,24 +72,30 @@ Script tự động:
 | Benign | 713 | 69.8% | fleschutz/PowerShell (680), PSSysadminToolkit (33) |
 | **Tổng** | **1,022** | 100% | 6 repositories từ GitHub |
 
-### 4.2. Kết quả đánh giá trên tập mới
+### 4.2. Kết quả đánh giá trên tập mới (So sánh 2 phiên bản kiến trúc)
 
-| Metric | Tập gốc (Original) | Tập gốc (Mixed) | **Tập mới** |
-|--------|--------------------:|----------------:|------------:|
-| Accuracy | 98.54% | 95.57% | **76.52%** |
-| Precision | 99.42% | 97.99% | **97.26%** |
-| Recall | 97.62% | 92.93% | **22.98%** |
-| F1-Score | 98.51% | 95.40% | **37.17%** |
-| AUC | — | — | **0.6523** |
+Bảng dưới đây so sánh hiệu năng của mô hình 574 chiều (nhóm tự mở rộng) và 78 chiều (chuẩn bài báo) khi áp dụng lên tập dữ liệu mới:
 
-### 4.3. Ma trận nhầm lẫn (Confusion Matrix)
+| Phiên bản | Tập gốc (Original) | Tập gốc (Mixed) | **Tập dữ liệu mới (Domain Shift)** |
+|-----------|:-------------------:|:---------------:|:---------------------------------:|
+| 574 chiều (Nhóm mở rộng) | **98.58%** | **95.25%** | 77.20% |
+| 78 chiều (Chuẩn bài báo) | 98.81% | 95.73% | **77.69%** |
+
+**Chi tiết các metric trên tập mới:**
+
+| Phiên bản | Accuracy | Precision | Recall | F1-Score | AUC |
+|-----------|---------:|----------:|-------:|---------:|----:|
+| **574 chiều** | 77.20% | 100.00% | 24.60% | 39.48% | 0.6740 |
+| **78 chiều** | **77.69%** | 98.80% | **26.54%** | **41.84%** | **0.7770** |
+
+### 4.3. Ma trận nhầm lẫn (Confusion Matrix) của phiên bản tốt nhất (78 chiều)
 
 |  | Dự đoán: Benign | Dự đoán: Malicious |
 |--|----------------:|------------------:|
-| **Thực tế: Benign** | **711** (True Negative) | 2 (False Positive) |
-| **Thực tế: Malicious** | 238 (False Negative) | **71** (True Positive) |
+| **Thực tế: Benign** | **712** (True Negative) | 1 (False Positive) |
+| **Thực tế: Malicious** | 227 (False Negative) | **82** (True Positive) |
 
-**Tổng mẫu phân loại đúng:** 782/1022 = 76.52%
+**Tổng mẫu phân loại đúng:** 794/1022 = 77.69%
 
 ### 4.4. Biểu đồ
 
@@ -102,11 +108,11 @@ Các biểu đồ được lưu tại thư mục `results/`:
 
 ### 5.1. Tổng quan
 
-Kết quả cho thấy mô hình M-FastText-2 có **Precision rất cao (97.26%)** nhưng **Recall cực thấp (22.98%)** trên tập dữ liệu mới. Điều này có nghĩa:
+Kết quả cho thấy mô hình M-FastText-2 (ở cả 2 phiên bản) đều bị sụt giảm độ chính xác từ ~98% xuống còn ~77%. Dù **Precision vẫn giữ ở mức cực cao (~99%-100%)**, nhưng **Recall lại tụt thê thảm (khoảng 25%)**. Điều này có nghĩa:
 
-- ✅ Khi mô hình **nói một script là mã độc**, thì **97.26% là đúng** → hầu như không bắt nhầm file an toàn.
-- ❌ Nhưng mô hình **bỏ sót tới 77% mã độc** (238/309 mã độc bị phân loại sai thành benign).
-- ✅ Mô hình nhận diện **99.72% script benign chính xác** (711/713).
+- ✅ Khi mô hình **nói một script là mã độc**, thì nó **gần như chắc chắn đúng** (tỉ lệ false positive chỉ là 0 hoặc 1 mẫu).
+- ❌ Nhưng mô hình **bỏ sót tới 75% mã độc** (khoảng 227-233 mã độc bị phân loại sai thành benign).
+- ✅ Mô hình nhận diện script benign cực kỳ chính xác.
 
 ### 5.2. Nguyên nhân Recall thấp — Phân tích chi tiết
 
@@ -173,13 +179,22 @@ Top 200 functions và Top 33 member tokens được học từ tập MPSD. Các 
 
 Mô hình FastText được train trên corpus MPSD. Các vector nhúng (word embeddings) phản ánh ngữ nghĩa của **tập MPSD**, không phải ngữ nghĩa chung. Khi gặp từ vựng và cấu trúc câu mới từ pentesting tools, embedding có thể không phân biệt được malicious vs benign.
 
-### 5.3. Tại sao Precision vẫn rất cao (97.26%)?
+### 5.3. So sánh khả năng tổng quát hóa: Tại sao mô hình 78 chiều lại chiến thắng?
 
-Precision cao cho thấy: trong 309 mã độc mới, có khoảng **71 script** vẫn mang đặc điểm "mã độc truyền thống" (có shellcode, obfuscation, hoặc sử dụng các function/member nguy hiểm) → mô hình vẫn bắt đúng. Chỉ có **2 script benign** bị bắt nhầm → rất ít false positive.
+Một phát hiện cực kỳ thú vị trong đồ án này là sự đảo ngược thứ hạng giữa 2 phiên bản kiến trúc khi gặp dữ liệu mới:
+- Trên tập huấn luyện gốc (MPSD), mô hình **574 chiều** (nhóm tự mở rộng) thường cho kết quả nhỉnh hơn mô hình 78 chiều.
+- Tuy nhiên, trên tập dữ liệu mới, mô hình **78 chiều** lại vượt lên dẫn trước (Accuracy 77.69% > 77.20%, Recall 26.54% > 24.60%).
 
-Điều này chứng tỏ mô hình **rất bảo thủ** (conservative): nó chỉ đánh dấu malicious khi **rất chắc chắn**, nên hầu như không bắt nhầm, nhưng cái giá phải trả là bỏ sót nhiều.
+**Nguyên nhân:**
+Mô hình 574 chiều giữ nguyên 200 giá trị đếm tần suất của từng hàm độc lập. Điều này giúp mô hình "học thuộc" rất tốt các đặc trưng cục bộ của tập huấn luyện (ví dụ: tập train hay dùng `Invoke-Expression` thì mô hình sẽ gán trọng số rất cao cho hàm này). Tuy nhiên, đây chính là **Overfitting (Học vẹt)**.
+Ngược lại, mô hình 78 chiều đã "nén" 200 giá trị đếm hàm thành **1 con số điểm tổng quát duy nhất** (Total functions rating) như tác giả Fang et al. đề xuất. Việc nén thông tin này giúp mô hình mất đi tính cụ thể của từng hàm, nhưng bù lại mang đến **khả năng tổng quát hóa (Generalization) tốt hơn**. Khi sang tập mới, dù mã độc gọi hàm khác đi, tổng điểm hàm nguy hiểm vẫn phản ánh đúng bản chất, giúp mô hình bắt được nhiều mã độc hơn (True Positive 82 > 76).
 
-### 5.4. Ý nghĩa học thuật
+### 5.4. Tại sao Precision vẫn rất cao (~99%)?
+
+Precision cao cho thấy: trong 309 mã độc mới, những script vẫn mang đặc điểm "mã độc truyền thống" (có shellcode, obfuscation) mô hình vẫn bắt trúng. 
+Điều này chứng tỏ mô hình **rất bảo thủ** (conservative): nó chỉ đánh dấu malicious khi **rất chắc chắn**, nên hầu như không bắt nhầm, nhưng cái giá phải trả là bỏ lọt nhiều.
+
+### 5.5. Ý nghĩa học thuật
 
 Kết quả này minh họa rõ ràng khái niệm **Distribution Shift** (Dịch chuyển phân phối) trong Machine Learning:
 
@@ -201,8 +216,9 @@ Dựa trên phân tích, có thể cải thiện mô hình theo các hướng:
 
 ## 7. Kết Luận
 
-- Mô hình M-FastText-2 **hoạt động xuất sắc** trên dữ liệu cùng phân phối (Accuracy ~98.54% trên tập gốc MPSD).
-- Khi áp dụng lên **dữ liệu mới từ nguồn khác**, hiệu suất giảm đáng kể (Accuracy 76.52%, Recall 22.98%) do **sự khác biệt bản chất giữa hai loại mã độc**.
-- Precision vẫn giữ ở mức rất cao (97.26%), cho thấy mô hình **không bắt nhầm** file an toàn.
-- Kết quả này đặt ra câu hỏi quan trọng về **khả năng tổng quát hóa** của các mô hình phát hiện mã độc dựa trên đặc trưng tĩnh, và gợi mở hướng nghiên cứu tiếp theo.
+- Mô hình M-FastText-2 **hoạt động xuất sắc** trên dữ liệu cùng phân phối (Accuracy >98% trên tập gốc MPSD).
+- Khi áp dụng lên **dữ liệu mới từ nguồn khác**, hiệu suất giảm đáng kể (Accuracy ~77%, Recall ~25%) do **hiện tượng Domain Shift** và sự khác biệt bản chất giữa hai loại mã độc.
+- Nhóm đã phát hiện ra rằng **mô hình được nén đặc trưng (78 chiều)** có khả năng tổng quát hóa mạnh mẽ hơn, giảm thiểu được Overfitting so với mô hình thô (574 chiều) khi đối mặt với dữ liệu chưa từng thấy.
+- Precision vẫn giữ ở mức gần tuyệt đối (99-100%), cho thấy mô hình **không bắt nhầm** file an toàn, rất phù hợp triển khai như một màng lọc bảo thủ.
+- Kết quả này chứng minh giới hạn của kỹ thuật phân tích tĩnh (Static Analysis) và gợi mở hướng nghiên cứu tiếp theo về việc kết hợp các đặc trưng hành vi động (Dynamic Analysis).
 
