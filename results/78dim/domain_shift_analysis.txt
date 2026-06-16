@@ -1,0 +1,143 @@
+======================================================================
+  DOMAIN SHIFT DEEP ANALYSIS REPORT
+======================================================================
+
+--- [A] TEXTUAL FEATURES (13D) ---
+
+  Feature                     MPSD Mal    New Mal    New Ben     Missed     Caught
+  -----------------------------------------------------------------------------
+  Shellcode (0/1)                0.521      0.440      0.020      0.313      0.793
+  Entropy                        5.017      4.937      5.209      4.805      5.304
+  Top char 1 (ASCII)            72.767     37.634     70.689     32.529     51.768
+  Top char 2                    73.556     91.777    239.794     93.731     86.366
+  Top char 3                    91.773    106.502    129.281    108.855     99.988
+  Top char 4                   102.347    103.437    124.527    106.229     95.707
+  Top char 5                    83.370     99.078    108.153    100.841     94.195
+  Num strings                   13.323    220.369     16.895    206.767    258.024
+  Max string len              2139.978  97935.411    146.173  13862.088 330674.976
+  Avg string len               187.997  11195.806     36.528    786.077  40012.981
+  URL/IP (0/1)                   0.435      0.806      0.928      0.811      0.793
+  Total vars                    37.881    456.120     25.327    356.921    730.732
+  Special vars                   0.713      2.078      0.076      2.344      1.341
+
+--- [B] TOKEN FEATURES ---
+
+  Metric                           MPSD Mal    New Mal    New Ben     Missed     Caught
+  ----------------------------------------------------------------------------------
+  Total Rating (mean)                  8.04     -62.07      -8.13    -100.11      43.26
+    (median)                           2.00     -22.00      -4.00     -26.00      -9.50
+    (std)                             70.94     430.43      24.79     440.90     380.68
+    (% positive rating)               89.2%       9.7%       5.8%       2.6%      29.3%
+
+--- [C] AST FEATURES (29D) ---
+
+  AST Node                         MPSD Mal    New Mal    New Ben     Missed     Caught
+  ----------------------------------------------------------------------------------
+  ScriptBlockAst                       5.33     101.40       8.52     102.19      99.21
+  NamedBlockAst                        0.04       2.78       0.09       3.63       0.45
+  StatementBlockAst                    0.63      14.42       2.11      14.62      13.88
+  PipelineAst                          2.28      37.09       2.54      29.13      59.15
+  AssignmentStatementAst              10.35     109.03       5.64      81.45     185.37
+  IfStatementAst                       2.13      35.66       2.25      32.37      44.78
+  ForEachStatementAst                  0.11       2.90       0.29       3.18       2.13
+  WhileStatementAst                    0.07       1.09       0.12       0.89       1.63
+  ForStatementAst                      1.01       1.29       0.19       0.99       2.11
+  DoWhileStatementAst                  0.01       0.12       0.03       0.10       0.18
+  SwitchStatementAst                   0.14       5.47       0.26       5.99       4.02
+  TryStatementAst                      0.06       2.20       0.77       2.71       0.80
+  ReturnStatementAst                   0.23       6.84       1.15       5.80       9.71
+  ThrowStatementAst                    0.35       5.53       0.61       3.34      11.59
+  ExitStatementAst                     0.02       0.66       1.79       0.44       1.28
+  BreakStatementAst                    0.04       0.99       0.07       0.97       1.04
+  ContinueStatementAst                 0.04       0.81       0.06       0.55       1.52
+  FunctionDefinitionAst                0.36      10.36       0.54       9.11      13.84
+  CommandAst                           8.06     131.54       8.14     112.49     184.28
+  CommandParameterAst                  9.20     118.78       7.90      96.48     180.49
+  VariableExpressionAst               37.88     456.12      25.33     356.92     730.73
+  MemberExpressionAst                 25.12     327.58      21.56     272.01     481.43
+  InvokeMemberExpressionAst            8.06      84.85       2.59      53.49     171.68
+  TypeExpressionAst                    7.27      96.14       3.77      59.43     197.76
+  ConvertExpressionAst                 1.94      33.64       2.02      25.58      55.95
+  ScriptBlockExpressionAst             0.21       2.71       0.26       1.57       5.88
+  SubExpressionAst                     0.29       6.40       2.22       6.22       6.93
+  IndexExpressionAst                   1.12      22.55       1.45      24.81      16.27
+  AST_Depth                            0.76       4.20       1.84       4.09       4.50
+
+--- [D] FASTTEXT CLASSIFIER PREDICTION (Compressed 2D) ---
+
+  Metric                                MPSD Mal    New Mal    New Ben     Missed     Caught
+  ---------------------------------------------------------------------------------------
+  FT pred=1 (malicious) %                  98.0%      20.7%       0.1%       2.6%      70.7%
+  FT confidence (mean proba)              0.9727     0.2483     0.0526     0.1073     0.6385
+  FT confidence (median proba)            0.9987     0.0904     0.0243     0.0403     0.6024
+
+--- [E] TOP FUNCTION CALL ANALYSIS ---
+
+  Functions in top200 that appear MORE in MISSED malware than MPSD malware:
+  Function                             MPSD freq  Missed freq  Score Verdict        
+  --------------------------------------------------------------------------------
+  if                                         251         7348     -1 BENIGN-scored  
+  parameter                                    0         2781     -1 BENIGN-scored  
+  new-object                                 308         1817     -1 BENIGN-scored  
+  write-verbose                                0         1607     -1 BENIGN-scored  
+  add-member                                   0         1509     +1 MAL-scored     
+  param                                        0         1266     -1 BENIGN-scored  
+  validatenotnullorempty                       0         1172     -1 BENIGN-scored  
+  alias                                        0          967     -1 BENIGN-scored  
+  out-null                                     0          938     +1 MAL-scored     
+  definefield                                  0          847     +1 MAL-scored     
+  foreach                                      0          721     -1 BENIGN-scored  
+  elseif                                       0          714     -1 BENIGN-scored  
+  cmdletbinding                                0          710     -1 BENIGN-scored  
+  foreach-object                               0          660     -1 BENIGN-scored  
+  add                                         31          625     -1 BENIGN-scored  
+  setoffset                                    0          554     +1 MAL-scored     
+  and                                          0          524     -1 BENIGN-scored  
+  write-output                                 0          519     -1 BENIGN-scored  
+  select-object                                0          428     -1 BENIGN-scored  
+  split                                        0          415     -1 BENIGN-scored  
+  get-random                                   2          376     +1 MAL-scored     
+  substring                                    0          357     -1 BENIGN-scored  
+  where-object                                 0          338     -1 BENIGN-scored  
+  write-host                                   0          318     -1 BENIGN-scored  
+  invoke                                       0          317     +1 MAL-scored     
+  or                                           0          297     -1 BENIGN-scored  
+  outputtype                                   0          292     -1 BENIGN-scored  
+  validaterange                                0          275     -1 BENIGN-scored  
+  null                                         0          270     +1 MAL-scored     
+  write-warning                                0          269     -1 BENIGN-scored  
+
+  Functions that appear in CAUGHT malware but NOT in MISSED:
+  Function                             Caught freq  Missed freq  Score
+  ----------------------------------------------------------------------
+  out-null                                    2859          938     +1
+  definefield                                 2070          847     +1
+  get-random                                  1408          376     +1
+  invoke                                      1277          317     +1
+  setoffset                                   1029          554     +1
+  null                                         990          270     +1
+  add-signedintasunsigned                      782          207     +1
+  get-delegatetype                             564          105     +1
+  getdelegateforfunctionpointer                512           98     +1
+  get-procaddress                              500           91     +1
+  defineliteral                                484          153     +1
+  signedintasunsigned                          462          120     +1
+  createtype                                   314           95     +1
+  ptrtostructure                               314          103     +1
+  sizeof                                       312          116     +1
+  getbytes                                     292          243     +1
+  out-powershelllauncher                       269            3     +1
+  definetype                                   267           81     +1
+  scpsmem                                      231           63     +1
+  structuretoptr                               231           78     +1
+
+======================================================================
+  KEY FINDINGS - NGUYEN NHAN CU THE
+======================================================================
+
+  1. SHELLCODE: MPSD mal=52.1% co shellcode, Missed=31.3%, Caught=79.3%
+  2. ENTROPY: MPSD mal=5.02, Missed=4.80, Benign=5.21
+  3. TOKEN RATING: MPSD mal=8.0, Missed=-100.1, Caught=43.3, Benign=-8.1
+  4. FASTTEXT: MPSD mal 98.0% bi goi la malicious, Missed chi 2.6%, Caught 70.7%
+  5. URL/IP: MPSD mal=43.5% co URL/IP, Missed=81.1%
+  6. SPECIAL VARS: MPSD mal=0.7, Missed=2.3, Benign=0.1

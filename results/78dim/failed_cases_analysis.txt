@@ -1,0 +1,458 @@
+==========================================================================================
+  FAILED CASES ANALYSIS REPORT
+==========================================================================================
+
+==========================================================================================
+  SECTION A: TY LE BAT/LOT THEO TUNG CONG CU
+==========================================================================================
+
+  Tool                     Total   Caught   Missed   Recall
+  --------------------------------------------------------
+  PowerSploit                 43       13       30    30.2%
+  Nishang                     89        7       82     7.9%
+  Invoke-Obfuscation          15        1       14     6.7%
+  Empire                     162       61      101    37.7%
+
+==========================================================================================
+  SECTION B: SO SANH KY THUAT GIUA CAUGHT (TP) VA MISSED (FN)
+==========================================================================================
+
+  Ky thuat                              Caught %   Missed %    Delta
+  -------------------------------------------------------------------
+  Base64 Encoding                          54.9%      33.0%   +21.8% <<<
+  Hex/Byte Array Shellcode                 59.8%      26.0%   +33.8% <<<
+  String Obfuscation                       18.3%      18.9%    -0.7%
+  Tick/Backtick Insertion                  23.2%      23.3%    -0.2%
+  Dynamic Execution (IEX)                  56.1%      35.2%   +20.9% <<<
+  Download Payload                          6.1%      21.1%   -15.0%
+  Reflective Loading                       80.5%      28.6%   +51.9% <<<
+  Process/Memory Injection                 31.7%       7.0%   +24.7% <<<
+  Anti-Detection/Evasion                   42.7%      22.0%   +20.7% <<<
+  Persistence Mechanisms                   24.4%      12.3%   +12.1%
+  Credential Theft/Dumping                 42.7%      37.9%    +4.8%
+  Reconnaissance/Discovery                 46.3%      36.1%   +10.2%
+
+==========================================================================================
+  SECTION C: CASE STUDY - FILES DIEN HINH
+==========================================================================================
+
+  === MISSED (False Negative) - Tai sao mo hinh bo lot? ===
+
+  --- MISSED: Empire-PowerShell_DomainPasswordSpray.ps1 ---
+  Source: Empire
+  Size: 17.9 KB (18289 chars)
+  FastText confidence: 0.0067
+  RF confidence (malicious): 0.0286
+  Techniques detected:
+    + Tick/Backtick Insertion: 5 matches
+    + Reconnaissance/Discovery: 5 matches
+    + String Obfuscation: 1 matches
+    + Dynamic Execution (IEX): 1 matches
+    + Credential Theft/Dumping: 1 matches
+  Techniques ABSENT (7):
+    - Base64 Encoding
+    - Hex/Byte Array Shellcode
+    - Download Payload
+    - Reflective Loading
+    - Process/Memory Injection
+    ... and 2 more
+  First 5 lines of code:
+    | function Invoke-DomainPasswordSpray{
+    |     <#
+    |     .SYNOPSIS
+    | 
+    |     This module performs a password spray attack against users of a domain. By default it will autom
+
+  --- MISSED: Invoke-Obfuscation_Invoke-Obfuscation_1.ps1 ---
+  Source: Invoke-Obfuscation
+  Size: 4.6 KB (4687 chars)
+  FastText confidence: 0.0026
+  RF confidence (malicious): 0.0000
+  Techniques detected:
+    + Tick/Backtick Insertion: 7 matches
+  Techniques ABSENT (11):
+    - Base64 Encoding
+    - Hex/Byte Array Shellcode
+    - String Obfuscation
+    - Dynamic Execution (IEX)
+    - Download Payload
+    ... and 6 more
+  First 5 lines of code:
+    | #   This file is part of Invoke-Obfuscation.
+    | #
+    | #   Copyright 2017 Daniel Bohannon <@danielhbohannon>
+    | #         while at Mandiant <http://www.mandiant.com>
+    | #
+
+  --- MISSED: Nishang_Add-ConstrainedDelegationBackdoor.ps1 ---
+  Source: Nishang
+  Size: 4.9 KB (5055 chars)
+  FastText confidence: 0.0049
+  RF confidence (malicious): 0.1857
+  Techniques detected:
+    + Credential Theft/Dumping: 9 matches
+    + Reconnaissance/Discovery: 2 matches
+  Techniques ABSENT (10):
+    - Base64 Encoding
+    - Hex/Byte Array Shellcode
+    - String Obfuscation
+    - Tick/Backtick Insertion
+    - Dynamic Execution (IEX)
+    ... and 5 more
+  First 5 lines of code:
+    | #Requires -Modules ActiveDirectory
+    | 
+    | # If you do not have AD module, you can refer to the following link.
+    | # https://github.com/samratashok/ADModule
+    | 
+
+  --- MISSED: PowerSploit_AntivirusBypass.ps1 ---
+  Source: PowerSploit
+  Size: 0.1 KB (67 chars)
+  FastText confidence: 0.0022
+  RF confidence (malicious): 0.0286
+  Techniques detected:
+    (No malware techniques detected)
+  Techniques ABSENT (12):
+    - Base64 Encoding
+    - Hex/Byte Array Shellcode
+    - String Obfuscation
+    - Tick/Backtick Insertion
+    - Dynamic Execution (IEX)
+    ... and 7 more
+  First 5 lines of code:
+    | Get-ChildItem (Join-Path $PSScriptRoot *.ps1) | % { . $_.FullName}
+
+  --- MISSED: Empire-PowerShell_Invoke-PsExec.ps1 ---
+  Source: Empire
+  Size: 16.5 KB (16890 chars)
+  FastText confidence: 0.1082
+  RF confidence (malicious): 0.4952
+  Techniques detected:
+    + Dynamic Execution (IEX): 15 matches
+    + Reflective Loading: 9 matches
+    + Reconnaissance/Discovery: 1 matches
+  Techniques ABSENT (9):
+    - Base64 Encoding
+    - Hex/Byte Array Shellcode
+    - String Obfuscation
+    - Tick/Backtick Insertion
+    - Download Payload
+    ... and 4 more
+  First 5 lines of code:
+    | function Invoke-PsExec {
+    | <#
+    |     .SYNOPSIS
+    | 
+    |         This function is a rough port of Metasploit's psexec functionality.
+
+  === CAUGHT (True Positive) - Tai sao mo hinh bat duoc? ===
+
+  --- CAUGHT: Empire-PowerShell_Out-EncodedWhitespaceCommand.ps1 ---
+  Source: Empire
+  Size: 30.1 KB (30788 chars)
+  FastText confidence: 0.7145
+  RF confidence (malicious): 0.9190
+  Techniques detected:
+    + Dynamic Execution (IEX): 9 matches
+    + Anti-Detection/Evasion: 5 matches
+    + String Obfuscation: 4 matches
+    + Persistence Mechanisms: 1 matches
+  Techniques ABSENT (8):
+    - Base64 Encoding
+    - Hex/Byte Array Shellcode
+    - Tick/Backtick Insertion
+    - Download Payload
+    - Reflective Loading
+    ... and 3 more
+  First 5 lines of code:
+    | #   This file is part of Invoke-Obfuscation.
+    | #
+    | #   Copyright 2017 Daniel Bohannon <@danielhbohannon>
+    | #         while at Mandiant <http://www.mandiant.com>
+    | #
+
+  --- CAUGHT: Empire-PowerShell_Invoke-Boolang.ps1 ---
+  Source: Empire
+  Size: 743.8 KB (761681 chars)
+  FastText confidence: 0.9994
+  RF confidence (malicious): 0.9000
+  Techniques detected:
+    + Base64 Encoding: 9 matches
+    + Reflective Loading: 4 matches
+    + Tick/Backtick Insertion: 3 matches
+    + Hex/Byte Array Shellcode: 1 matches
+    + Dynamic Execution (IEX): 1 matches
+  Techniques ABSENT (7):
+    - String Obfuscation
+    - Download Payload
+    - Process/Memory Injection
+    - Anti-Detection/Evasion
+    - Persistence Mechanisms
+    ... and 2 more
+  First 5 lines of code:
+    | function Invoke-Boolang
+    | {
+    | <#
+    |     .SYNOPSIS
+    | 
+
+  --- CAUGHT: PowerSploit_Invoke-TokenManipulation.ps1 ---
+  Source: PowerSploit
+  Size: 92.5 KB (94704 chars)
+  FastText confidence: 0.5324
+  RF confidence (malicious): 0.9000
+  Techniques detected:
+    + Dynamic Execution (IEX): 56 matches
+    + Persistence Mechanisms: 16 matches
+    + Process/Memory Injection: 14 matches
+    + Reflective Loading: 13 matches
+    + Reconnaissance/Discovery: 13 matches
+    + Credential Theft/Dumping: 8 matches
+    + Hex/Byte Array Shellcode: 3 matches
+  Techniques ABSENT (5):
+    - Base64 Encoding
+    - String Obfuscation
+    - Tick/Backtick Insertion
+    - Download Payload
+    - Anti-Detection/Evasion
+  First 5 lines of code:
+    | function Invoke-TokenManipulation
+    | {
+    | <#
+    | .SYNOPSIS
+    | 
+
+==========================================================================================
+  SECTION D: DANH SACH DAY DU CAC FILE BI BO LOT (MISSED)
+==========================================================================================
+
+  #    Filename                                                Source              RF Conf Techniques
+  --------------------------------------------------------------------------------------------
+  1    Empire-PowerShell_Invoke-PsExec.ps1                     Empire               0.4952     3
+  2    Empire-PowerShell_Invoke-Phant0m.ps1                    Empire               0.4857     5
+  3    Empire-PowerShell_Invoke-Tater.ps1                      Empire               0.4857     9
+  4    Empire-PowerShell_Out-ObfuscatedStringCommand.ps1       Empire               0.4857     3
+  5    Empire-PowerShell_Invoke-Portscan.ps1                   Empire               0.4821     5
+  6    Empire-PowerShell_Invoke-Thunderstruck.ps1              Empire               0.4714     1
+  7    Empire-PowerShell_Invoke-SDCLTBypass.ps1                Empire               0.4571     4
+  8    Empire-PowerShell_http.ps1                              Empire               0.4500     8
+  9    Empire-PowerShell_PowerUp.ps1                           Empire               0.4429    11
+  10   PowerSploit_CodeExecution.tests.ps1                     PowerSploit          0.4393     4
+  11   Empire-PowerShell_Invoke-BypassUACTokenManipulation.    Empire               0.4286     7
+  12   Nishang_Invoke-MimikatzWDigestDowngrade.ps1             Nishang              0.4250    10
+  13   PowerSploit_Invoke-Portscan.ps1                         PowerSploit          0.4155     5
+  14   PowerSploit_Out-EncodedCommand.ps1                      PowerSploit          0.4143     4
+  15   PowerSploit_PowerUp.ps1                                 PowerSploit          0.4143    11
+  16   PowerSploit_Out-EncryptedScript.ps1                     PowerSploit          0.4000     5
+  17   Empire-PowerShell_Invoke-PowerDump.ps1                  Empire               0.3905     8
+  18   Empire-PowerShell_dumpCredStore.ps1                     Empire               0.3857     3
+  19   Empire-PowerShell_Invoke-InternalMonologue.ps1          Empire               0.3786     3
+  20   Empire-PowerShell_Invoke-InternalMonologue_1.ps1        Empire               0.3786     3
+  21   Empire-PowerShell_Invoke-ARPScan.ps1                    Empire               0.3690     1
+  22   Empire-PowerShell_Invoke-WinEnum.ps1                    Empire               0.3571     5
+  23   Nishang_Invoke-PowerShellUdp.ps1                        Nishang              0.3512     3
+  24   Empire-PowerShell_Exploit-Jenkins.ps1                   Empire               0.3429     5
+  25   Empire-PowerShell_Invoke-PSInject.ps1                   Empire               0.3333     7
+  26   Nishang_Get-LSASecret.ps1                               Nishang              0.3286     3
+  27   PowerSploit_Find-AVSignature.ps1                        PowerSploit          0.3143     1
+  28   Empire-PowerShell_Invoke-ReverseDNSLookup.ps1           Empire               0.3048     1
+  29   Empire-PowerShell_http_malleable.ps1                    Empire               0.3036     8
+  30   Empire-PowerShell_Invoke-PrintDemon.ps1                 Empire               0.3000     3
+  31   Empire-PowerShell_Persistence.ps1                       Empire               0.2857     7
+  32   Empire-PowerShell_powerview.ps1                         Empire               0.2857     9
+  33   Nishang_Download_Execute.ps1                            Nishang              0.2857     4
+  34   Empire-PowerShell_Invoke-BackdoorLNK.ps1                Empire               0.2821     4
+  35   Nishang_Invoke-PoshRatHttps.ps1                         Nishang              0.2821     5
+  36   Nishang_Invoke-Interceptor.ps1                          Nishang              0.2810     5
+  37   Empire-PowerShell_Invoke-DCSync.ps1                     Empire               0.2781    10
+  38   Empire-PowerShell_Find-TrustedDocuments.ps1             Empire               0.2714     1
+  39   Empire-PowerShell_Get-SQLServerLoginDefaultPw.ps1       Empire               0.2714     2
+  40   Nishang_Execute-DNSTXT-Code.ps1                         Nishang              0.2714     8
+  41   Nishang_Powerpreter.ps1                                 Nishang              0.2667    12
+  42   Empire-PowerShell_Invoke-EnvBypass.ps1                  Empire               0.2571     4
+  43   Empire-PowerShell_PrivescCheck.ps1                      Empire               0.2571    12
+  44   PowerSploit_Get-TimedScreenshot.ps1                     PowerSploit          0.2571     2
+  45   Nishang_Get-PassHints.ps1                               Nishang              0.2500     2
+  46   Empire-PowerShell_MailRaider.ps1                        Empire               0.2429     6
+  47   Empire-PowerShell_Out-ObfuscatedTokenCommand.ps1        Empire               0.2429     7
+  48   Empire-PowerShell_Get-SiteListPassword.ps1              Empire               0.2286     3
+  49   Empire-PowerShell_PowerBreach.ps1                       Empire               0.2286     4
+  50   PowerSploit_Persistence.ps1                             PowerSploit          0.2286     8
+  51   Empire-PowerShell_Get-BrowserData.ps1                   Empire               0.2143     1
+  52   Empire-PowerShell_powermad.ps1                          Empire               0.2143     5
+  53   Empire-PowerShell_New-HoneyHash.ps1                     Empire               0.2057     3
+  54   Empire-PowerShell_Out-ObfuscatedAst.ps1                 Empire               0.2000     1
+  55   Invoke-Obfuscation_Out-ObfuscatedAst.ps1                Invoke-Obfuscation   0.2000     1
+  56   Empire-PowerShell_Invoke-RIDHijacking.ps1               Empire               0.1857     5
+  57   Nishang_Add-ConstrainedDelegationBackdoor.ps1           Nishang              0.1857     2
+  58   Nishang_Add-ConstrainedDelegationBackdoor_1.ps1         Nishang              0.1857     2
+  59   PowerSploit_PowerView.ps1                               PowerSploit          0.1857     8
+  60   Empire-PowerShell_Get-SQLColumnSampleData.ps1           Empire               0.1821     1
+  61   Empire-PowerShell_Get-GPPPassword.ps1                   Empire               0.1714     3
+  62   Empire-PowerShell_comms.ps1                             Empire               0.1714     5
+  63   Empire-PowerShell_Invoke-ZeroLogon.ps1                  Empire               0.1619     4
+  64   PowerSploit_Invoke-ReverseDnsLookup.ps1                 PowerSploit          0.1619     1
+  65   Nishang_Invoke-AmsiBypass.ps1                           Nishang              0.1607     5
+  66   Empire-PowerShell_Get-RickAstley.ps1                    Empire               0.1571     1
+  67   Empire-PowerShell_Invoke-EgressCheck.ps1                Empire               0.1571     0
+  68   Empire-PowerShell_Invoke-FodHelperBypass.ps1            Empire               0.1571     3
+  69   Empire-PowerShell_Invoke-RunAs.ps1                      Empire               0.1571     2
+  70   Empire-PowerShell_Out-EncodedSpecialCharOnlyCommand.    Empire               0.1571     4
+  71   Nishang_Invoke-PowerShellTcpOneLineBind.ps1             Nishang              0.1571     2
+  72   Nishang_Start-CaptureServer.ps1                         Nishang              0.1571     4
+  73   PowerSploit_Invoke-WmiCommand.ps1                       PowerSploit          0.1571     5
+  74   Empire-PowerShell_powercat.ps1                          Empire               0.1524     5
+  75   Empire-PowerShell_Start-MonitorTCPConnections.ps1       Empire               0.1429     0
+  76   Empire-PowerShell_agent.ps1                             Empire               0.1429     7
+  77   Nishang_Invoke-JSRatRundll.ps1                          Nishang              0.1429     2
+  78   Nishang_Out-JS.ps1                                      Nishang              0.1429     4
+  79   Nishang_Run-EXEonRemote.ps1                             Nishang              0.1429     3
+  80   PowerSploit_Out-CompressedDll.ps1                       PowerSploit          0.1429     3
+  81   Empire-PowerShell_Out-Minidump.ps1                      Empire               0.1329     2
+  82   PowerSploit_Out-Minidump.ps1                            PowerSploit          0.1329     2
+  83   Nishang_Invoke-PowerShellIcmp.ps1                       Nishang              0.1286     2
+  84   PowerSploit_Get-HttpStatus.ps1                          PowerSploit          0.1286     0
+  85   Nishang_Invoke-JSRatRegsvr.ps1                          Nishang              0.1238     3
+  86   Empire-PowerShell_Set-Wallpaper.ps1                     Empire               0.1143     2
+  87   Empire-PowerShell_Start-ProcessAsUser.ps1               Empire               0.1143     4
+  88   Nishang_Download-Execute-PS.ps1                         Nishang              0.1143     3
+  89   Nishang_Download.ps1                                    Nishang              0.1143     1
+  90   Nishang_Invoke-PowerShellTcp.ps1                        Nishang              0.1143     3
+  91   Nishang_Out-RundllCommand.ps1                           Nishang              0.1143     4
+  92   Nishang_Out-SCT.ps1                                     Nishang              0.1143     4
+  93   PowerSploit_Get-ComputerDetail.ps1                      PowerSploit          0.1143     2
+  94   Empire-PowerShell_Exploit-JBoss.ps1                     Empire               0.1000     1
+  95   Empire-PowerShell_Get-ComputerDetails.ps1               Empire               0.1000     2
+  96   Empire-PowerShell_Get-SQLInstanceDomain.ps1             Empire               0.1000     3
+  97   Empire-PowerShell_Get-SQLServerInfo.ps1                 Empire               0.1000     1
+  98   Empire-PowerShell_Invoke-SocksProxy.ps1                 Empire               0.1000     3
+  99   Empire-PowerShell_Invoke-Watson.ps1                     Empire               0.1000     2
+  100  Nishang_Invoke-ADSBackdoor.ps1                          Nishang              0.1000     5
+  101  Nishang_Invoke-Mimikittenz.ps1                          Nishang              0.1000     5
+  102  Nishang_Invoke-PoshRatHttp.ps1                          Nishang              0.1000     4
+  103  Nishang_Invoke-PsUACme.ps1                              Nishang              0.1000     4
+  104  Nishang_Out-Excel.ps1                                   Nishang              0.1000     8
+  105  PowerSploit_Invoke-CompareAttributesForClass.ps1        PowerSploit          0.1000     1
+  106  Empire-PowerShell_Get-ClipboardContents.ps1             Empire               0.0857     2
+  107  Empire-PowerShell_Invoke-Paranoia.ps1                   Empire               0.0857     2
+  108  Empire-PowerShell_Invoke-SharpLoginPrompt.ps1           Empire               0.0857     2
+  109  Nishang_Out-HTA.ps1                                     Nishang              0.0857     4
+  110  Nishang_Show-TargetScreen.ps1                           Nishang              0.0857     3
+  111  Nishang_Keylogger.ps1                                   Nishang              0.0843     8
+  112  Empire-PowerShell_Invoke-MetasploitPayload.ps1          Empire               0.0714     3
+  113  Empire-PowerShell_Invoke-PortFwd.ps1                    Empire               0.0714     1
+  114  Empire-PowerShell_Invoke-Script.ps1                     Empire               0.0714     3
+  115  Empire-PowerShell_PSRansom.ps1                          Empire               0.0714     6
+  116  Nishang_Add-Exfiltration.ps1                            Nishang              0.0714     4
+  117  Nishang_Invoke-PsGcatAgent.ps1                          Nishang              0.0714     5
+  118  Nishang_Out-Shortcut.ps1                                Nishang              0.0714     4
+  119  Nishang_StringToBase64.ps1                              Nishang              0.0714     1
+  120  Empire-PowerShell_Invoke-PhishingLNK.ps1                Empire               0.0571     0
+  121  Empire-PowerShell_Invoke-SmbScanner.ps1                 Empire               0.0571     2
+  122  Invoke-Obfuscation_Out-EncodedSpecialCharOnlyCommand    Invoke-Obfuscation   0.0571     0
+  123  Nishang_Add-ScrnSaveBackdoor.ps1                        Nishang              0.0571     4
+  124  Nishang_FireListener.ps1                                Nishang              0.0571     0
+  125  Nishang_Invoke-Encode.ps1                               Nishang              0.0571     3
+  126  Nishang_Out-Word.ps1                                    Nishang              0.0571     8
+  127  PowerSploit_Get-GPPAutologon.ps1                        PowerSploit          0.0571     1
+  128  Empire-PowerShell_Find-Fruit.ps1                        Empire               0.0429     2
+  129  Empire-PowerShell_HTTP-Login.ps1                        Empire               0.0429     3
+  130  Empire-PowerShell_Invoke-DCOM.ps1                       Empire               0.0429     1
+  131  Empire-PowerShell_Invoke-PostExfil.ps1                  Empire               0.0429     1
+  132  Nishang_ConvertTo-ROT13.ps1                             Nishang              0.0429     1
+  133  Nishang_Gupt-Backdoor.ps1                               Nishang              0.0429     5
+  134  Nishang_HTTP-Backdoor.ps1                               Nishang              0.0429     7
+  135  Nishang_Invoke-PortScan.ps1                             Nishang              0.0429     0
+  136  Nishang_Invoke-PowerShellWmi.ps1                        Nishang              0.0429     6
+  137  Nishang_Out-CHM.ps1                                     Nishang              0.0429     6
+  138  PowerSploit_Get-GPPPassword.ps1                         PowerSploit          0.0429     3
+  139  Empire-PowerShell_DomainPasswordSpray.ps1               Empire               0.0286     5
+  140  Empire-PowerShell_Fetch-And-Brute-Local-Accounts.ps1    Empire               0.0286     3
+  141  Empire-PowerShell_Get-SystemDNSServer.ps1               Empire               0.0286     0
+  142  Empire-PowerShell_Invoke-Assembly.ps1                   Empire               0.0286     4
+  143  Empire-PowerShell_Invoke-BSOD.ps1                       Empire               0.0286     1
+  144  Empire-PowerShell_Invoke-DownloadFile.ps1               Empire               0.0286     1
+  145  Empire-PowerShell_Invoke-ExecuteMSBuild.ps1             Empire               0.0286     6
+  146  Invoke-Obfuscation_Out-CompressedCommand.ps1            Invoke-Obfuscation   0.0286     0
+  147  Invoke-Obfuscation_Out-EncodedBXORCommand.ps1           Invoke-Obfuscation   0.0286     0
+  148  Nishang_Add-RegBackdoor.ps1                             Nishang              0.0286     0
+  149  Nishang_Do-Exfiltration.ps1                             Nishang              0.0286     4
+  150  Nishang_Execute-OnTime.ps1                              Nishang              0.0286     7
+  151  Nishang_FireBuster.ps1                                  Nishang              0.0286     0
+  152  Nishang_Invoke-BruteForce.ps1                           Nishang              0.0286     3
+  153  Nishang_Set-DCShadowPermissions.ps1                     Nishang              0.0286     1
+  154  PowerSploit_AntivirusBypass.ps1                         PowerSploit          0.0286     0
+  155  PowerSploit_CodeExecution.ps1                           PowerSploit          0.0286     0
+  156  PowerSploit_Exfiltration.ps1                            PowerSploit          0.0286     0
+  157  PowerSploit_Privesc.ps1                                 PowerSploit          0.0286     0
+  158  PowerSploit_Privesc.tests.ps1                           PowerSploit          0.0286     5
+  159  PowerSploit_Recon.ps1                                   PowerSploit          0.0286     0
+  160  PowerSploit_ScriptModification.ps1                      PowerSploit          0.0286     0
+  161  Empire-PowerShell_Get-ClipboardHistory.ps1              Empire               0.0143     3
+  162  Empire-PowerShell_Get-LAPSPasswords.ps1                 Empire               0.0143     1
+  163  Empire-PowerShell_Get-SPN.ps1                           Empire               0.0143     1
+  164  Empire-PowerShell_Invoke-CredentialPhisher.ps1          Empire               0.0143     6
+  165  Empire-PowerShell_Invoke-Kerberoast.ps1                 Empire               0.0143     4
+  166  Empire-PowerShell_Invoke-Kerberoast_1.ps1               Empire               0.0143     4
+  167  Empire-PowerShell_Invoke-SQLOSCmd.ps1                   Empire               0.0143     0
+  168  Empire-PowerShell_KeePassConfig.ps1                     Empire               0.0143     2
+  169  Empire-PowerShell_Sherlock.ps1                          Empire               0.0143     2
+  170  Invoke-Obfuscation_Out-EncodedAsciiCommand.ps1          Invoke-Obfuscation   0.0143     0
+  171  Invoke-Obfuscation_Out-EncodedBinaryCommand.ps1         Invoke-Obfuscation   0.0143     0
+  172  Invoke-Obfuscation_Out-EncodedHexCommand.ps1            Invoke-Obfuscation   0.0143     0
+  173  Invoke-Obfuscation_Out-EncodedOctalCommand.ps1          Invoke-Obfuscation   0.0143     0
+  174  Invoke-Obfuscation_Out-EncodedWhitespaceCommand.ps1     Invoke-Obfuscation   0.0143     0
+  175  Invoke-Obfuscation_Out-ObfuscatedStringCommand.ps1      Invoke-Obfuscation   0.0143     0
+  176  Invoke-Obfuscation_Out-ObfuscatedTokenCommand.ps1       Invoke-Obfuscation   0.0143     0
+  177  Invoke-Obfuscation_Out-PowerShellLauncher.ps1           Invoke-Obfuscation   0.0143     0
+  178  Invoke-Obfuscation_Out-SecureStringCommand.ps1          Invoke-Obfuscation   0.0143     0
+  179  Nishang_Add-Persistence.ps1                             Nishang              0.0143     4
+  180  Nishang_DNS_TXT_Pwnage.ps1                              Nishang              0.0143     7
+  181  Nishang_Execute-Command-MSSQL.ps1                       Nishang              0.0143     4
+  182  Nishang_Get-Information.ps1                             Nishang              0.0143     3
+  183  Nishang_Get-WebCredentials.ps1                          Nishang              0.0143     1
+  184  Nishang_Invoke-Decode.ps1                               Nishang              0.0143     1
+  185  Nishang_Invoke-PsGcat.ps1                               Nishang              0.0143     6
+  186  Nishang_Out-DnsTxt.ps1                                  Nishang              0.0143     3
+  187  Nishang_Out-Java.ps1                                    Nishang              0.0143     4
+  188  Nishang_Out-WebQuery.ps1                                Nishang              0.0143     3
+  189  Nishang_Parse_Keys.ps1                                  Nishang              0.0143     0
+  190  PowerSploit_PowerSploit.ps1                             PowerSploit          0.0143     0
+  191  Empire-PowerShell_Get-IndexedItem.ps1                   Empire               0.0000     1
+  192  Empire-PowerShell_Get-KerberosServiceTicket.ps1         Empire               0.0000     2
+  193  Empire-PowerShell_Get-SQLQuery.ps1                      Empire               0.0000     1
+  194  Empire-PowerShell_Get-WinUpdates.ps1                    Empire               0.0000     1
+  195  Empire-PowerShell_HostRecon.ps1                         Empire               0.0000     3
+  196  Empire-PowerShell_Invoke-ExfilDataToGitHub.ps1          Empire               0.0000     2
+  197  Empire-PowerShell_Invoke-Ntsd.ps1                       Empire               0.0000     0
+  198  Empire-PowerShell_Invoke-Obfuscation_1.ps1              Empire               0.0000     1
+  199  Empire-PowerShell_Invoke-SMBAutoBrute.ps1               Empire               0.0000     3
+  200  Empire-PowerShell_Invoke-SMBLogin.ps1                   Empire               0.0000     1
+  201  Empire-PowerShell_Invoke-SessionGopher.ps1              Empire               0.0000     5
+  202  Empire-PowerShell_Invoke-VoiceTroll.ps1                 Empire               0.0000     1
+  203  Empire-PowerShell_Set-MacAttribute.ps1                  Empire               0.0000     0
+  204  Invoke-Obfuscation_Invoke-Obfuscation_1.ps1             Invoke-Obfuscation   0.0000     1
+  205  Nishang_Base64ToString.ps1                              Nishang              0.0000     1
+  206  Nishang_Copy-VSS.ps1                                    Nishang              0.0000     2
+  207  Nishang_Create-MultipleSessions.ps1                     Nishang              0.0000     3
+  208  Nishang_ExetoText.ps1                                   Nishang              0.0000     1
+  209  Nishang_Get-WLAN-Keys.ps1                               Nishang              0.0000     0
+  210  Nishang_Invoke-CredentialsPhish.ps1                     Nishang              0.0000     2
+  211  Nishang_Invoke-NetworkRelay.ps1                         Nishang              0.0000     2
+  212  Nishang_Invoke-Prasadhak.ps1                            Nishang              0.0000     1
+  213  Nishang_Invoke-SSIDExfil.ps1                            Nishang              0.0000     2
+  214  Nishang_Invoke-SessionGopher.ps1                        Nishang              0.0000     6
+  215  Nishang_Out-SCF.ps1                                     Nishang              0.0000     1
+  216  Nishang_Remove-Persistence.ps1                          Nishang              0.0000     1
+  217  Nishang_Remove-PoshRat.ps1                              Nishang              0.0000     0
+  218  Nishang_Remove-Update.ps1                               Nishang              0.0000     2
+  219  Nishang_Set-RemotePSRemoting.ps1                        Nishang              0.0000     2
+  220  Nishang_Set-RemoteWMI.ps1                               Nishang              0.0000     2
+  221  Nishang_Speak.ps1                                       Nishang              0.0000     0
+  222  Nishang_TexttoExe.ps1                                   Nishang              0.0000     1
+  223  Nishang_nishang.ps1                                     Nishang              0.0000     1
+  224  PowerSploit_Exfiltration.tests.ps1                      PowerSploit          0.0000     2
+  225  PowerSploit_PowerSploit.tests.ps1                       PowerSploit          0.0000     0
+  226  PowerSploit_Recon.tests.ps1                             PowerSploit          0.0000     1
+  227  PowerSploit_Remove-Comment.ps1                          PowerSploit          0.0000     3

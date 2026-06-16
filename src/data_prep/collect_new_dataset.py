@@ -30,8 +30,8 @@ from pathlib import Path
 # CONFIGURATION
 # ============================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-NEW_DATASET_DIR = os.path.join(BASE_DIR, "new_dataset")
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
+NEW_DATASET_DIR = os.path.join(BASE_DIR, "data", "new_dataset")
 CLONE_TEMP_DIR = os.path.join(BASE_DIR, "_clone_temp")
 
 # Repositories to clone

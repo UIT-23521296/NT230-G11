@@ -1,0 +1,30 @@
+=================================================================
+  RETRAIN EXPERIMENT RESULTS
+=================================================================
+
+  Experiment                                         Acc     Prec   Recall       F1
+  ───────────────────────────────────────────────────────────────────────────────
+  Baseline: Train MPSD, Test New                  0.7769   0.9880   0.2654   0.4184
+  EXP1: CV on New Dataset Only                    0.9540   0.9100   0.9415   0.9247
+  EXP2: CV on Combined (MPSD+New)                 0.9805   0.9843   0.9743   0.9793
+  EXP3: Train Combined, Test New                  1.0000   1.0000   1.0000   1.0000
+
+  EXP1 fold details:
+    Fold 1: Acc=0.9512 Prec=0.8714 Rec=0.9839 F1=0.9242
+    Fold 2: Acc=0.9366 Prec=0.8889 Rec=0.9032 F1=0.8960
+    Fold 3: Acc=0.9804 Prec=0.9394 Rec=1.0000 F1=0.9688
+    Fold 4: Acc=0.9657 Prec=0.9365 Rec=0.9516 F1=0.9440
+    Fold 5: Acc=0.9363 Prec=0.9138 Rec=0.8689 F1=0.8908
+
+  EXP2 fold details:
+    Fold 1: Acc=0.9806 Prec=0.9811 Rec=0.9779 F1=0.9795
+    Fold 2: Acc=0.9832 Prec=0.9888 Rec=0.9756 F1=0.9821
+    Fold 3: Acc=0.9790 Prec=0.9832 Rec=0.9723 F1=0.9777
+    Fold 4: Acc=0.9811 Prec=0.9843 Rec=0.9756 F1=0.9800
+    Fold 5: Acc=0.9785 Prec=0.9843 Rec=0.9701 F1=0.9771
+
+  EXP3 Confusion Matrix:
+                    Predicted
+                  Benign  Malicious
+  True Benign       713       0
+  True Malicious      0     309

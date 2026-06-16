@@ -1,0 +1,95 @@
+==========================================================================================
+  OBFUSCATION EXPERIMENT RESULTS
+==========================================================================================
+
+==========================================================================================
+  EXPERIMENT A: OBFUSCATE MA DOC MOI → TEST LAI
+==========================================================================================
+
+  Baseline (Original Malicious): Recall = 26.5% (82/309 scripts detected)
+
+  Base64 Wrapping:
+    Recall = 1.2% (3/254 detected)
+    Delta vs Baseline: -25.4%
+    Scripts tested: 254 (filtered <= 100KB)
+
+  Tick Insertion:
+    Recall = 15.4% (39/254 detected)
+    Delta vs Baseline: -11.2%
+    Scripts tested: 254 (filtered <= 100KB)
+
+  String Reversal:
+    Recall = 3.1% (8/254 detected)
+    Delta vs Baseline: -23.4%
+    Scripts tested: 254 (filtered <= 100KB)
+
+  Variable Renaming:
+    Recall = 21.3% (54/254 detected)
+    Delta vs Baseline: -5.3%
+    Scripts tested: 254 (filtered <= 100KB)
+
+  XOR Encoding:
+    Recall = 99.6% (253/254 detected)
+    Delta vs Baseline: +73.1%
+    Scripts tested: 254 (filtered <= 100KB)
+
+==========================================================================================
+  EXPERIMENT B: OBFUSCATE FILE BENIGN → TEST LAI
+==========================================================================================
+
+  Baseline (Original Benign): FP Rate = 0.1% (1/713 falsely flagged)
+
+  Base64 Wrapping:
+    FP Rate = 0.3% (2/712 falsely flagged)
+    Delta vs Baseline: +0.1%
+    Scripts tested: 712
+
+  Tick Insertion:
+    FP Rate = 0.1% (1/712 falsely flagged)
+    Delta vs Baseline: +0.0%
+    Scripts tested: 712
+
+  String Reversal:
+    FP Rate = 12.4% (88/712 falsely flagged)
+    Delta vs Baseline: +12.2%
+    Scripts tested: 712
+
+  Variable Renaming:
+    FP Rate = 0.6% (4/712 falsely flagged)
+    Delta vs Baseline: +0.4%
+    Scripts tested: 712
+
+  XOR Encoding:
+    FP Rate = 99.9% (711/712 falsely flagged)
+    Delta vs Baseline: +99.7%
+    Scripts tested: 712
+
+==========================================================================================
+  SUMMARY TABLE
+==========================================================================================
+
+  Obfuscation Technique       Mal Recall   Ben FP Rate   Recall Delta   FP Delta
+  ------------------------------------------------------------------------------
+  Original                         26.5%          0.1%          +0.0%      +0.0%
+  Base64 Wrapping                   1.2%          0.3%         -25.4%      +0.1%
+  Tick Insertion                   15.4%          0.1%         -11.2%      +0.0%
+  String Reversal                   3.1%         12.4%         -23.4%     +12.2%
+  Variable Renaming                21.3%          0.6%          -5.3%      +0.4%
+  XOR Encoding                     99.6%         99.9%         +73.1%     +99.7%
+
+==========================================================================================
+  KEY FINDINGS
+==========================================================================================
+
+  1. Ky thuat obfuscation giup TANG Recall nhieu nhat: XOR Encoding
+     Recall: 26.5% -> 99.6% (+73.1%)
+
+  2. Ky thuat obfuscation gay FP nhieu nhat tren Benign: XOR Encoding
+     FP Rate: 0.1% -> 99.9% (+99.7%)
+
+  3. KET LUAN: Mo hinh M-FastText-2 thuc chat chi hoc duoc
+     'dau hieu obfuscation' (entropy cao, base64, hex bytes)
+     chu KHONG hieu ban chat ma doc. Khi ma doc 'sach' (khong
+     obfuscate) thi mo hinh bo lot, nhung khi them obfuscation
+     vao thi Recall tang => chung minh mo hinh phu thuoc vao
+     dau hieu be mat (surface-level indicators).
