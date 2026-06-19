@@ -1,7 +1,11 @@
 import os
+import sys
 
-base_file = r"e:\Dai Hoc\Nam 3\Co che ma doc\Do An\src\core\m_fasttext2_model_78dim.py"
-out_file = r"e:\Dai Hoc\Nam 3\Co che ma doc\Do An\src\core\m_fasttext2_model_enhanced.py"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))
+
+base_file = os.path.join(BASE_DIR, "src", "core", "m_fasttext2_model_78dim.py")
+out_file = os.path.join(BASE_DIR, "src", "core", "m_fasttext2_model_enhanced.py")
 
 with open(base_file, "r", encoding="utf-8") as f:
     content = f.read()
