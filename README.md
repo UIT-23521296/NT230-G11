@@ -4,28 +4,29 @@ Repository này chứa mã nguồn, tập dữ liệu và báo cáo thực nghi�
 
 ## Nội dung đồ án
 
-Đồ án được chia thành 3 phần chính:
+Đồ án được chia thành 3 phần chính và những cải tiến cốt lõi:
 - **Phần A:** Nghiên cứu và phân tích tập dữ liệu MPSD (Malicious PowerShell Script Dataset).
-- **Phần B:** Hiện thực lại mô hình M-FastText-2. Nhóm đã xây dựng **2 phiên bản kiến trúc**:
-  - **Phiên bản 574 chiều:** Trực tiếp ghép nối toàn bộ 200 đặc trưng hàm để tối ưu hóa khả năng phát hiện trên tập dữ liệu cũ.
-  - **Phiên bản 78 chiều:** Tuân thủ tuyệt đối cấu trúc nén đặc trưng (nén 200 hàm thành 1 điểm số, ép FastText xuống 2 chiều) theo bài báo gốc của Fang et al. (2021).
-- **Phần C:** Thu thập tập dữ liệu mã độc/an toàn hoàn toàn mới từ GitHub (PowerSploit, Nishang, Empire...) và phát hiện hiện tượng "Domain Shift" (Sự suy giảm hiệu năng do lệch phân phối), đồng thời chứng minh kiến trúc 78 chiều có tính **tổng quát hóa (Generalization)** tốt hơn.
+- **Phần B:** Hiện thực lại mô hình M-FastText-2 chuẩn theo bài báo gốc. Nhóm đã xây dựng **kiến trúc 78 chiều** tuân thủ tuyệt đối cấu trúc nén đặc trưng (nén 200 hàm thành 1 điểm số, ép FastText xuống 2 chiều) theo bài báo gốc của Fang et al. (2021) nhằm đảm bảo khả năng tổng quát hóa.
+- **Phần C & Đóng Góp Mới:** 
+  - Thu thập tập dữ liệu mã độc/an toàn hoàn toàn mới từ GitHub (PowerSploit, Nishang, Empire...) và phát hiện hiện tượng "Domain Shift" (Sự suy giảm hiệu năng do lệch phân phối).
+  - Đề xuất và triển khai giải pháp **Data Augmentation & Continuous Learning** (Trộn mã độc hiện đại vào tập huấn luyện), giúp mô hình phục hồi xuất sắc độ nhạy (Recall) từ 26.54% lên **97.43%**.
 
 ## Cấu trúc thư mục
 
 ```text
 NT230-G11/
-├── m_fasttext2_model.py          # Kiến trúc 574 chiều (Trích xuất đặc trưng & Train mô hình)
-├── m_fasttext2_model_78dim.py    # Kiến trúc 78 chiều (Chuẩn xác theo mô tả bài báo gốc)
-├── reproduce_table3.py           # Tái tạo Table 3 so sánh các mô hình
-├── collect_new_dataset.py        # Script thu thập dữ liệu mới từ GitHub (Phần C)
-├── evaluate_new_dataset.py       # Đánh giá bản 574 chiều trên tập dữ liệu mới
-├── evaluate_new_dataset_78dim.py # Đánh giá bản 78 chiều trên tập dữ liệu mới
-├── REPORT_PART_C.md              # Báo cáo chi tiết kết quả Phần C
-├── requirements.txt              # Danh sách thư viện Python cần thiết
-├── mpsd/                         # Tập dữ liệu gốc (Phần A)
-├── new_dataset/                  # Tập dữ liệu mới thu thập (Phần C)
-└── results/                      # Chứa biểu đồ, log chạy chia theo 574dim/ và 78dim/
+├── src/core/m_fasttext2_model_78dim.py    # Kiến trúc 78 chiều (Chuẩn xác theo bài báo gốc)
+├── src/core/m_fasttext2_model_enhanced.py # Kiến trúc cải tiến (Tích hợp Win32 API Features)
+├── src/data_prep/collect_new_dataset.py   # Script thu thập dữ liệu mới từ GitHub (Phần C)
+├── src/experiments/evaluate_new_dataset_78dim.py # Đánh giá bản 78 chiều trên tập dữ liệu mới
+├── src/experiments/evaluate_enhanced_model.py    # Đánh giá mô hình đã được cải tiến
+├── src/experiments/retrain_new_dataset.py        # Thí nghiệm Retrain (Giải quyết Domain Shift)
+├── docs/REPORT_PART_C.md                  # Báo cáo chi tiết kết quả Phần C
+├── docs/SYSTEM_DESCRIPTION.md             # Mô tả chi tiết hệ thống và các đặc trưng
+├── requirements.txt                       # Danh sách thư viện Python cần thiết
+├── data/mpsd/                             # Tập dữ liệu gốc (Phần A)
+├── data/new_dataset/                      # Tập dữ liệu mới thu thập (Phần C)
+└── results/                               # Chứa biểu đồ, log chạy chia theo 78dim/ và enhanced/
 ```
 
 > **Lưu ý:** Thư mục `results/` chứa biểu đồ xuất ra, các file model weights (`.model`, `.npy`, `.pkl`) đã được đưa vào `.gitignore` do kích thước quá lớn (> 2.5GB). Bạn cần tự chạy code để sinh ra model cục bộ.
@@ -38,37 +39,33 @@ Yêu cầu Python 3.8 trở lên. Cài đặt các thư viện cần thiết:
 pip install -r requirements.txt
 ```
 
-*(Lưu ý: Bạn nên thêm thư mục project vào danh sách loại trừ (Exclusion) của Windows Defender hoặc Antivirus để tránh việc các script PowerShell mã độc trong `mpsd` bị xóa mất trong quá trình quét).*
+*(Lưu ý: Bạn nên thêm thư mục project vào danh sách loại trừ (Exclusion) của Windows Defender hoặc Antivirus để tránh việc các script PowerShell mã độc trong thư mục data bị xóa mất trong quá trình quét).*
 
 ### 2. Chạy Phần B (Huấn luyện và đánh giá trên tập gốc)
 
-Chạy các file chính để huấn luyện mô hình M-FastText-2 trên tập dữ liệu MPSD, xuất biểu đồ, và tự động lưu model weights:
+Chạy file chính để huấn luyện mô hình M-FastText-2 trên tập dữ liệu MPSD, xuất biểu đồ, và tự động lưu model weights:
 ```bash
-# Chạy bản 574 chiều
-python m_fasttext2_model.py
-
-# Chạy bản 78 chiều (Chuẩn bài báo)
-python m_fasttext2_model_78dim.py
+python src/core/m_fasttext2_model_78dim.py
 ```
 
-Để tái tạo **Bảng 3 (Table 3)** so sánh 7 biến thể mô hình khác nhau trên tập Mixed:
-```bash
-python reproduce_table3.py
-```
-
-### 3. Chạy Phần C (Kiểm thử trên dữ liệu mới)
+### 3. Chạy Phần C & Cải tiến (Kiểm thử trên dữ liệu mới)
 
 **Bước 1: Thu thập dữ liệu**
-Chạy script để tự động clone các repository chứa mã độc và mã an toàn từ GitHub về thư mục `new_dataset/`:
+Chạy script để tự động clone các repository chứa mã độc và mã an toàn từ GitHub về thư mục `data/new_dataset/`:
 ```bash
-python collect_new_dataset.py
+python src/data_prep/collect_new_dataset.py
 ```
 
-**Bước 2: Đánh giá**
-Load 2 mô hình đã lưu từ Phần B và dự đoán trên tập dữ liệu vừa thu thập để xem khả năng tổng quát hóa (bản 78 chiều sẽ thể hiện sự vượt trội):
+**Bước 2: Đánh giá Domain Shift**
+Load mô hình đã lưu từ Phần B và dự đoán trên tập dữ liệu vừa thu thập để quan sát sự suy giảm của Recall (Domain Shift):
 ```bash
-python evaluate_new_dataset.py
-python evaluate_new_dataset_78dim.py
+python src/experiments/evaluate_new_dataset_78dim.py
 ```
 
-Kết quả báo cáo phân tích chi tiết cho phần C có tại file `REPORT_PART_C.md`.
+**Bước 3: Chạy giải pháp Cải tiến (Continuous Learning)**
+Kiểm chứng giải pháp Data Augmentation để phục hồi sức mạnh mô hình, đồng thời đánh giá trên mô hình Hybrid (Tích hợp Rule-based kiểm tra API):
+```bash
+python src/experiments/evaluate_enhanced_model.py
+```
+
+Kết quả phân tích chi tiết có tại `docs/REPORT_PART_C.md` và kiến trúc hệ thống tại `docs/SYSTEM_DESCRIPTION.md`.

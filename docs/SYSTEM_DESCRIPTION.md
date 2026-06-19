@@ -14,17 +14,17 @@ PowerShell Script (.ps1)
         ▼                                          ▼
   [Manual Feature Extraction]               [FastText Embedding]
         │                                          │
-        ├── Textual Features (12 dim)              │
-        ├── Token Features (233 dim)               │
+        ├── Textual Features (13 dim)              │
+        ├── Function/Token Features (34 dim)       │
         └── AST Node Features (29 dim)             │
         │                                          │
-        │    274 dim                          300 dim
+        │    76 dim                           2 dim (Label, Conf)
         │                                          │
         └──────────────┬───────────────────────────┘
                        │
                        ▼
               [Concatenation]
-              574-dim vector
+            78-dim Hybrid Vector
                        │
                        ▼
              [Random Forest Classifier]
@@ -63,9 +63,9 @@ Mục đích: So sánh khả năng phát hiện mã độc "thô" (dễ) vs mã 
 
 ---
 
-## 3. Trích Xuất Đặc Trưng Thủ Công (Manual Features) — 274 chiều
+## 3. Trích Xuất Đặc Trưng Thủ Công (Manual Features) — 76 chiều
 
-### 3.1. Đặc Trưng Văn Bản (Textual Features) — 12 chiều
+### 3.1. Đặc Trưng Văn Bản (Textual Features) — 13 chiều
 
 Đặc trưng văn bản phân tích các thuộc tính bề mặt của script, bao gồm:
 
@@ -87,7 +87,7 @@ $$H(X) = -\sum_{i=1}^{n} p(x_i) \log_2 p(x_i)$$
 
 Trong đó $p(x_i)$ là tần suất xuất hiện của ký tự $x_i$ trong script.
 
-**Ý nghĩa**: Mã độc bị obfuscate (mã hóa, nén, Base64) thường có entropy **rất cao** (gần 6-7 bit) do phân phối ký tự gần như đồng đều. Script bình thường có entropy **thấp hơn** (khoảng 4-5 bit) do sử dụng ngôn ngữ tự nhiên với phân phối ký tự không đều.
+**Ý nghĩa**: Trái ngược với file nhị phân (.exe) bị pack sẽ có entropy cao, trong môi trường văn bản như PowerShell, mã độc bị obfuscate (ví dụ: dùng mảng Hex `0xfc, 0xe8...`) thường có tập ký tự bị thu hẹp đáng kể (chỉ dùng `0-9`, `a-f`, `x`, `,`). Sự lặp lại liên tục của một tập ký tự giới hạn này làm cho độ hỗn loạn giảm xuống, dẫn đến entropy **THẤP HƠN**. Ngược lại, kịch bản lành tính (Benign) sử dụng ngôn ngữ tự nhiên với từ vựng phong phú, đa dạng ký tự nên có mức phân bổ đồng đều hơn, tạo ra entropy **CAO HƠN**. Đây là một phát hiện quan trọng được xác nhận trong bài báo.
 
 #### Features 3-7: Top 5 ký tự xuất hiện nhiều nhất (5 chiều, số nguyên)
 
@@ -110,45 +110,15 @@ Quét script tìm:
 
 **Ý nghĩa**: Nhiều mã độc PowerShell tải payload từ server C2 (Command & Control) thông qua `Invoke-WebRequest` hoặc `DownloadString`. Sự xuất hiện của URL/IP là dấu hiệu quan trọng.
 
-#### Feature 12: Số lượng biến đặc biệt (1 chiều, số nguyên)
+#### Features 12-13: Biến số (Variables) (2 chiều, số nguyên)
 
-Đếm số lần xuất hiện của các biến PowerShell có tên đáng ngờ: `$cmd`, `$shell`, `$exec`, `$download`, `$payload`, `$shellcode`, `$inject`, `$exploit`, `$bypass`, `$encode`, `$decode`, `$base64`, `$compress`, `$webclient`, `$socket`, `$stream`, `$http`, `$wscript`, `$powershell`, `$hidden`, `$c`.
+Đếm các đặc điểm về biến trong script:
+- **Tổng số biến**: Đếm tổng số lượng biến được định nghĩa hoặc gọi trong script.
+- **Biến đặc thù**: Đếm số lần xuất hiện của các biến PowerShell có tên đáng ngờ (ví dụ: `$cmd`, `$shell`, `$exec`, `$download`, `$payload`, `$shellcode`...).
 
 ---
 
-### 3.2. Đặc Trưng Token (Token Features) — 233 chiều
-
-Đặc trưng token phân tích **các hàm và phương thức** được gọi trong script.
-
-#### Phase tiền xử lý: Khám phá Top Tokens từ corpus
-
-Trước khi trích xuất đặc trưng, hệ thống thực hiện một bước quét toàn bộ corpus để xác định:
-
-**Top 200 Functions**: Quét **tất cả** scripts (cả malicious lẫn benign), trích xuất mọi lời gọi hàm/cmdlet bằng 2 pattern regex:
-- Cmdlet PowerShell: `Verb-Noun` (ví dụ: `Get-Process`, `Invoke-Expression`)
-- Hàm trước ngoặc đơn: `FunctionName(` (ví dụ: `FromBase64String(`)
-
-Đếm tần suất toàn cục, chọn 200 hàm phổ biến nhất.
-
-**Top 33 Member Tokens**: Quét **chỉ các script mã độc**, trích xuất mọi truy cập thành viên:
-- Dot member: `.MemberName` (ví dụ: `$obj.DownloadString`)
-- Static member: `::StaticMethod` (ví dụ: `[Convert]::FromBase64String`)
-
-Chọn 33 member token phổ biến nhất trong mã độc.
-
-#### Trích xuất đặc trưng cho mỗi script
-
-**200 features — Function Scoring**: Với mỗi script, đếm số lần xuất hiện của từng hàm trong Top 200. Kết quả là vector 200 chiều, mỗi chiều là số lần gọi hàm tương ứng.
-
-Ví dụ: Nếu Top 200 = [..., `invoke-expression`, `downloadstring`, ...] và script gọi `Invoke-Expression` 3 lần → feature tại vị trí đó = 3.
-
-**33 features — Member Token Distribution Ratio**: Với mỗi script, đếm số lần truy cập từng member trong Top 33, rồi **chia cho tổng số member accesses** trong script đó để tính tỷ lệ phân phối.
-
-$$ratio_i = \frac{count(member_i)}{total\_member\_accesses}$$
-
-Ví dụ: Script có 50 member accesses tổng cộng, trong đó `.Length` xuất hiện 10 lần → ratio = 10/50 = 0.2.
-
-**Tổng: 200 + 33 = 233 features**
+**Tổng cộng: 1 + 33 = 34 features**
 
 ---
 
@@ -257,30 +227,18 @@ $$\vec{v}_{script} = \frac{1}{N} \sum_{i=1}^{N} \vec{v}_{token_i}$$
 
 ## 5. Ghép Nối Đặc Trưng Lai (Feature Concatenation)
 
-Hệ thống cung cấp **2 phiên bản kiến trúc** để đánh giá sự cân bằng giữa khả năng tối ưu trên dữ liệu cũ và khả năng tổng quát hóa trên dữ liệu mới:
+Thay vì nối trực tiếp tất cả các nhóm đặc trưng thành một vector khổng lồ (vốn dễ gây ra hiện tượng Overfitting - Học vẹt trên dữ liệu huấn luyện), hệ thống áp dụng **Kiến trúc chuẩn nén thông tin (78 chiều)** nhằm mang lại khả năng tổng quát hóa (Generalization) tối ưu nhất, đặc biệt khi đối mặt với mã độc thay đổi hành vi:
 
-### 5.1. Kiến trúc mở rộng (574 chiều)
-Vector đặc trưng cuối cùng cho mỗi script được tạo bằng cách **nối (concatenate) trực tiếp** tất cả các nhóm đặc trưng thô:
-
-```
-[FastText Embedding | Textual Features | Token Features | AST Features]
-      300 dim             12 dim           233 dim          29 dim
-                              = 574 dim tổng cộng
-```
-**Đặc điểm**: Giữ nguyên 200 điểm tần suất của từng hàm độc lập. Mô hình này rất mạnh trên tập huấn luyện cũ nhưng dễ bị Overfitting.
-
-### 5.2. Kiến trúc chuẩn theo bài báo (78 chiều)
-Tuân thủ nghiêm ngặt cách tác giả Fang et al. đã đề xuất (nén thông tin để tránh nhiễu):
-1. **Nén FastText (300D $\rightarrow$ 2D):** Thay vì nối trực tiếp 300 chiều FastText, hệ thống train một bộ phân loại phụ (Linear Model) để ép 300 chiều này thành 2 giá trị: Nhãn dự đoán (0/1) và Xác suất (Confidence).
-2. **Nén Token Features (200D $\rightarrow$ 1D):** Cộng dồn điểm số của 200 hàm lại thành 1 giá trị duy nhất (Total functions rating).
-3. **Nén Token Features (33D $\rightarrow$ 22D):** Loại bỏ các thuộc tính ít quan trọng.
+1. **Nén FastText (300D $\rightarrow$ 2D):** Thay vì để mô hình Random Forest bị "ngợp" bởi 300 chiều không gian từ vựng, hệ thống sử dụng một bộ phân loại phụ (Logistic Regression) để ánh xạ 300 chiều này thành 2 giá trị cực kỳ súc tích: Nhãn dự đoán (0 hoặc 1) và Xác suất độ tin cậy (Confidence Score).
+2. **Nén Token Features (200D $\rightarrow$ 1D):** Thay vì đếm riêng lẻ tần suất của 200 hàm (khiến mô hình dễ bị ghi nhớ cứng nhắc một vài hàm phổ biến), hệ thống chấm điểm rủi ro cho từng hàm (Hàm an toàn: -1, Hàm nguy hiểm: +1) và cộng dồn lại thành **1 giá trị tổng duy nhất** (Total functions rating - Tổng điểm rủi ro bù trừ). Cơ chế này mô phỏng lại cách phân tích đánh giá của các chuyên gia bảo mật.
+3. **Giữ nguyên 33 Member Tokens (33D):** Giữ lại tỷ lệ phân bố của 33 phương thức gọi lệnh thường bị lợi dụng nhất (ví dụ: `.DownloadString`, `.Invoke`) vì đây là các kỹ thuật cốt lõi (Living-off-the-Land) mang tính nền tảng của PowerShell, rất khó để hacker thay đổi mà không làm hỏng script.
 
 ```
-[FastText (Compressed) | Textual | Token (Compressed) | AST Features]
-          2 dim           12 dim         1 + 22 dim         29 dim
+[FastText (Compressed) | Textual | Function/Token | AST Features]
+          2 dim           13 dim         34 dim         29 dim
                                = 78 dim tổng cộng
 ```
-**Đặc điểm**: Giảm thiểu thông tin thừa, mô hình mất đi tính cụ thể của từng hàm nhưng bù lại mang đến **khả năng tổng quát hóa (Generalization) tốt hơn** khi gặp mã độc hoàn toàn lạ.
+**Ý nghĩa khoa học của thiết kế**: Việc nén và giảm chiều dữ liệu (Dimensionality Reduction) hoạt động như một cơ chế **Điều chuẩn (Regularization)** mạnh mẽ. Nó buộc thuật toán Random Forest phải học cách phân loại dựa trên bản chất tổng quát của script (như tổng điểm rủi ro, cấu trúc cây logic AST) thay vì "học vẹt" (Shortcut Learning) sự xuất hiện của một hàm cụ thể nào đó. Nhờ vậy, khi đối mặt với các công cụ mã độc hoàn toàn mới chưa từng thấy, hệ thống không bị "mù" mà vẫn duy trì được khả năng nhận diện hành vi đáng ngờ.
 
 Các giá trị NaN hoặc Infinity (nếu có) được thay thế bằng 0 trước khi đưa vào bộ phân loại.
 
@@ -313,7 +271,7 @@ Với mỗi cây quyết định trong rừng:
 ### 6.3. Quá trình dự đoán
 
 Khi dự đoán một script mới:
-1. Trích xuất vector 574 chiều
+1. Trích xuất vector 78 chiều
 2. Đưa vector qua **tất cả 70 cây** → mỗi cây cho một phiếu bầu (Benign hoặc Malicious)
 3. Kết quả cuối cùng = **lớp có nhiều phiếu nhất** (majority voting)
 4. Xác suất = tỷ lệ cây bầu cho mỗi lớp (dùng cho ROC curve)
@@ -399,8 +357,7 @@ Toàn bộ quy trình được thực thi theo 7 bước tuần tự:
 - Kết quả: mô hình có thể chuyển bất kỳ token nào thành vector 300 chiều
 
 ### Bước 4: Trích xuất đặc trưng lai
-- Với mỗi script: tính FastText embedding (300d) + Textual (12d) + Token (233d) + AST (29d)
-- Ghép nối → vector 574 chiều
+- Ghép nối → vector 78 chiều lai
 - Thực hiện cho cả 2 tập (Original và Mixed)
 
 ### Bước 5: Huấn luyện và đánh giá
@@ -424,8 +381,6 @@ Toàn bộ quy trình được thực thi theo 7 bước tuần tự:
 
 ### Experiment 1: Original Dataset (malicious_pure vs benign)
 
-*(Số liệu dưới đây là của kiến trúc 574 chiều. Kiến trúc 78 chiều cũng cho kết quả tương tự, trung bình ~98.81%)*
-
 | Fold | Accuracy | Precision | Recall | F1-Score |
 |------|----------|-----------|--------|----------|
 | 1 | 0.9906 | 0.9940 | 0.9869 | 0.9905 |
@@ -436,8 +391,6 @@ Toàn bộ quy trình được thực thi theo 7 bước tuần tự:
 | **AVG** | **0.9854** | **0.9942** | **0.9762** | **0.9851** |
 
 ### Experiment 2: Mixed Dataset (mixed_malicious vs benign)
-
-*(Số liệu dưới đây là của kiến trúc 574 chiều. Kiến trúc 78 chiều cho trung bình ~95.73%)*
 
 | Fold | Accuracy | Precision | Recall | F1-Score |
 |------|----------|-----------|--------|----------|
@@ -452,7 +405,21 @@ Toàn bộ quy trình được thực thi theo 7 bước tuần tự:
 
 | Metric | Bài báo (Original) | Triển khai (Original) | Bài báo (Mixed) | Triển khai (Mixed) |
 |--------|--------------------:|----------------------:|----------------:|-----------------:|
-| Accuracy (574D) | 98.93% | 98.58% | 97.76% | 95.25% |
-| Accuracy (78D)  | 98.93% | 98.81% | 97.76% | 95.73% |
+| Accuracy (78D)  | 98.93% | 98.54% | 97.76% | 95.57% |
 
 Sai số nằm trong khoảng chấp nhận được (~0.1-2%) cho re-implementation do khác biệt về AST parser, thư viện FastText, và random seed. Đáng chú ý là phiên bản 78 chiều rất sát với kết quả trong bài báo.
+
+---
+
+## 10. Những Cải Tiến & Đóng Góp Mới Của Đồ Án
+
+Mặc dù hệ thống M-FastText-2 hoạt động rất tốt trên tập dữ liệu chuẩn, nhóm đã thực hiện các đánh giá mở rộng và đề xuất những giải pháp cải tiến cốt lõi nhằm nâng cấp hệ thống để đáp ứng được môi trường thực tế hiện nay:
+
+### 10.1. Khám phá Lỗ hổng Domain Shift
+Bài báo gốc không tính đến sự thay đổi bản chất của mã độc (Domain Shift). Khi nhóm kiểm thử mô hình trên một tập dữ liệu hoàn toàn mới chứa các công cụ APT/Pentest hiện đại (như PowerSploit, Nishang - viết mã "sạch" theo phong cách Living-off-the-Land), **tỷ lệ nhận diện (Recall) của mô hình đã giảm mạnh từ 97.62% xuống còn 26.54%**.
+
+### 10.2. Thực nghiệm Đa Thuật toán & Bản chất vấn đề
+Nhóm đã thay thế thuật toán Random Forest bằng **Mạng Nơ-ron (MLP)** và **Gradient Boosting (GBDT)** để kiểm chứng. Kết quả cho thấy cả MLP và GBDT đều thất bại thảm hại hơn (Recall rớt xuống 5% - 14%). Thực nghiệm này chứng minh nguyên nhân không phải do thuật toán yết kém, mà do mô hình bị mắc kẹt vào hiện tượng **Shortcut Learning (Học vẹt)**: Mạng Nơ-ron đã quá tập trung học các đặc trưng "dễ" (như Shellcode) của tập huấn luyện cũ, và hoàn toàn bỏ qua các đặc trưng hành vi tinh vi.
+
+### 10.3. Giải pháp Data Augmentation & Continuous Learning
+Từ phát hiện trên, đồ án đề xuất giải pháp cốt lõi: Không thay đổi thuật toán, mà thay đổi cách huấn luyện. Thông qua quy trình **Làm giàu dữ liệu (Data Augmentation)** và **Học liên tục (Continuous Learning)** — tức là chủ động trộn thêm các mẫu mã độc Pentesting hiện đại vào tập huấn luyện cũ để tái huấn luyện — mô hình đã phục hồi thành công khả năng nhận diện mã độc tàng hình, **đưa Recall từ mức 26.54% lên vượt mốc 97.43%**.

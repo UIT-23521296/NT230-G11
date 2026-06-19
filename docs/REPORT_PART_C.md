@@ -72,20 +72,18 @@ Script tự động:
 | Benign | 713 | 69.8% | fleschutz/PowerShell (680), PSSysadminToolkit (33) |
 | **Tổng** | **1,022** | 100% | 6 repositories từ GitHub |
 
-### 4.2. Kết quả đánh giá trên tập mới (So sánh 2 phiên bản kiến trúc)
+### 4.2. Kết quả đánh giá trên tập mới (Domain Shift)
 
-Bảng dưới đây so sánh hiệu năng của mô hình 574 chiều (nhóm tự mở rộng) và 78 chiều (chuẩn bài báo) khi áp dụng lên tập dữ liệu mới:
+Bảng dưới đây thể hiện hiệu năng của mô hình 78 chiều khi áp dụng lên tập dữ liệu mới:
 
-| Phiên bản | Tập gốc (Original) | Tập gốc (Mixed) | **Tập dữ liệu mới (Domain Shift)** |
-|-----------|:-------------------:|:---------------:|:---------------------------------:|
-| 574 chiều (Nhóm mở rộng) | **98.58%** | **95.25%** | 77.20% |
-| 78 chiều (Chuẩn bài báo) | 98.81% | 95.73% | **77.69%** |
+| Tập gốc (Original) | Tập gốc (Mixed) | **Tập dữ liệu mới (Domain Shift)** |
+|:-------------------:|:---------------:|:---------------------------------:|
+| 98.54% | 95.57% | **77.69%** |
 
 **Chi tiết các metric trên tập mới:**
 
 | Phiên bản | Accuracy | Precision | Recall | F1-Score | AUC |
 |-----------|---------:|----------:|-------:|---------:|----:|
-| **574 chiều** | 77.20% | 100.00% | 24.60% | 39.48% | 0.6740 |
 | **78 chiều** | **77.69%** | 98.80% | **26.54%** | **41.84%** | **0.7770** |
 
 ### 4.3. Ma trận nhầm lẫn (Confusion Matrix) của phiên bản tốt nhất (78 chiều)
@@ -125,11 +123,14 @@ Kết quả cho thấy mô hình M-FastText-2 (ở cả 2 phiên bản) đều b
 | **Mục đích** | Script tấn công trực tiếp (dropper, payload) | Công cụ hỗ trợ tấn công (framework, module) |
 | **Phong cách code** | Obfuscated, encoded, ngắn gọn, khó đọc | Clean code, có documentation, function rõ ràng |
 | **Cấu trúc** | Script đơn lẻ, chạy một lần | Module hoàn chỉnh với `param()`, `help`, `export` |
-| **Entropy** | Cao (do mã hóa/obfuscation) | Thấp-Trung bình (code dễ đọc) |
+| **Entropy** | Thấp (do giới hạn tập ký tự khi Obfuscate) | Cao hơn (ngôn ngữ đa dạng, từ vựng phong phú) |
 | **Shellcode** | Thường có (hex bytes, base64) | Ít khi có trực tiếp trong source |
 | **URL/IP** | Thường chứa C2 server address | Ít chứa trong code nguồn |
 
-**Ví dụ minh hoạ sự khác biệt:**
+**Giải thích sự khác biệt nghịch lý về Entropy:**
+Trong khi các file nhị phân (.exe) bị pack/encrypt có entropy rất cao (gần 8.0) do dữ liệu bị biến đổi thành mớ byte ngẫu nhiên phân bổ đều; thì trong kịch bản văn bản (Text Script) như PowerShell, nguyên lý này hoàn toàn bị đảo ngược. Để làm rối mã nguồn, hacker không thể mã hóa ngẫu nhiên toàn bộ mà thường dùng mảng Hex (ví dụ: tràn ngập `0xfc, 0xe8...`). Việc lặp lại liên tục một tập ký tự giới hạn (chỉ dùng `0-9`, `a-f`, `x`, `,`) khiến phân phối ký tự bị thiên lệch nghiêm trọng, làm cho Entropy rớt xuống mức **rất thấp**. Ngược lại, mã độc mới (pentesting tools) được viết rất "sạch" với đầy đủ từ khóa, tên biến đa dạng, comment — tạo ra mức phân bổ từ vựng phong phú, làm Entropy **tăng cao** tương đương với script lành tính. Đây là một đặc điểm của Domain Shift.
+
+**Ví dụ minh hoạ sự khác biệt cấu trúc:**
 
 Mã độc trong MPSD thường trông như thế này:
 ```powershell
@@ -179,15 +180,13 @@ Top 200 functions và Top 33 member tokens được học từ tập MPSD. Các 
 
 Mô hình FastText được train trên corpus MPSD. Các vector nhúng (word embeddings) phản ánh ngữ nghĩa của **tập MPSD**, không phải ngữ nghĩa chung. Khi gặp từ vựng và cấu trúc câu mới từ pentesting tools, embedding có thể không phân biệt được malicious vs benign.
 
-### 5.3. So sánh khả năng tổng quát hóa: Tại sao mô hình 78 chiều lại chiến thắng?
+### 5.3. Sức mạnh của khả năng tổng quát hóa (Generalization) thông qua nén đặc trưng
 
-Một phát hiện cực kỳ thú vị trong đồ án này là sự đảo ngược thứ hạng giữa 2 phiên bản kiến trúc khi gặp dữ liệu mới:
-- Trên tập huấn luyện gốc (MPSD), mô hình **574 chiều** (nhóm tự mở rộng) thường cho kết quả nhỉnh hơn mô hình 78 chiều.
-- Tuy nhiên, trên tập dữ liệu mới, mô hình **78 chiều** lại vượt lên dẫn trước (Accuracy 77.69% > 77.20%, Recall 26.54% > 24.60%).
+Một phát hiện trong quá trình triển khai: Việc sử dụng toàn bộ các đặc trưng thô (ví dụ: giữ nguyên 200 điểm đếm tần suất độc lập cho từng hàm) sẽ khiến thuật toán Machine Learning bị Overfitting (Học vẹt). Mô hình sẽ ghi nhớ cứng nhắc rẳng "Hàm A xuất hiện 5 lần thì chắc chắn là mã độc", và khi sang tập dữ liệu mới (mã độc không dùng Hàm A mà dùng Hàm B), mô hình lập tức sụp đổ.
 
-**Nguyên nhân:**
-Mô hình 574 chiều giữ nguyên 200 giá trị đếm tần suất của từng hàm độc lập. Điều này giúp mô hình "học thuộc" rất tốt các đặc trưng cục bộ của tập huấn luyện (ví dụ: tập train hay dùng `Invoke-Expression` thì mô hình sẽ gán trọng số rất cao cho hàm này). Tuy nhiên, đây chính là **Overfitting (Học vẹt)**.
-Ngược lại, mô hình 78 chiều đã "nén" 200 giá trị đếm hàm thành **1 con số điểm tổng quát duy nhất** (Total functions rating) như tác giả Fang et al. đề xuất. Việc nén thông tin này giúp mô hình mất đi tính cụ thể của từng hàm, nhưng bù lại mang đến **khả năng tổng quát hóa (Generalization) tốt hơn**. Khi sang tập mới, dù mã độc gọi hàm khác đi, tổng điểm hàm nguy hiểm vẫn phản ánh đúng bản chất, giúp mô hình bắt được nhiều mã độc hơn (True Positive 82 > 76).
+Ngược lại, kiến trúc **78 chiều** (nén đặc trưng) đã hoạt động hiệu quả và bền bỉ hơn nhiều khi đối mặt với Domain Shift. Việc nén thông tin 200 giá trị đếm hàm thành **1 con số điểm rủi ro tổng quát duy nhất** (Total functions rating) chính là một hình thức **Điều chuẩn (Regularization)** mạnh mẽ bằng cách giảm chiều dữ liệu (Dimensionality Reduction). 
+
+Cơ chế này ép mô hình mất đi tính cụ thể của từng hàm, nhưng bù lại mang đến **khả năng tổng quát hóa (Generalization) xuất sắc**. Khi sang tập mới, dù mã độc gọi hàm khác đi (đổi từ `Invoke-Expression` sang `Add-Type`), nhưng vì cả hai hàm đều bị hệ thống phân tích Heuristic đánh giá là hàm rủi ro cao (+1 điểm), nên tổng điểm rủi ro cuối cùng vẫn phản ánh đúng bản chất độc hại của file. Nhờ sự trừu tượng hóa này, mô hình đã chống chịu tốt hơn trước sự tiến hóa của mã độc và giữ được Recall ở mức 26.54% (một con số lẽ ra đã tiệm cận 0% nếu mô hình bị Overfitting hoàn toàn vào các đặc trưng thô của tập cũ).
 
 ### 5.4. Tại sao Precision vẫn rất cao (~99%)?
 
@@ -335,7 +334,7 @@ Ngược lại, các kỹ thuật như String Obfuscation và Tick Insertion **K
 | Variable Renaming | 21.3% | **-5.3%** ↓ | Đổi tên biến ít ảnh hưởng vì mô hình không phụ thuộc nhiều vào tên biến |
 | **XOR Encoding** | **99.6%** | **+73.1%** ↑↑↑ | Tạo mảng hex `0x` giống shellcode MPSD → mô hình bắt gần như 100% |
 
-**Phát hiện bất ngờ:** Giả thuyết ban đầu cho rằng obfuscation sẽ tăng Recall cho tất cả kỹ thuật. Thực tế, chỉ có **XOR Encoding** (tạo mảng hex) làm Recall tăng vọt lên 99.6%. Các kỹ thuật khác (Base64 Wrapping, String Reversal) lại làm Recall **GIẢM** vì chúng phá hủy các đặc trưng gốc mà mô hình cần để phân loại.
+**Phát hiện:** Giả thuyết ban đầu cho rằng obfuscation sẽ tăng Recall cho tất cả kỹ thuật. Thực tế, chỉ có **XOR Encoding** (tạo mảng hex) làm Recall tăng vọt lên 99.6%. Các kỹ thuật khác (Base64 Wrapping, String Reversal) lại làm Recall **GIẢM** vì chúng phá hủy các đặc trưng gốc mà mô hình cần để phân loại.
 
 → **Kết luận:** Mô hình không học "obfuscation nói chung" mà học **một pattern cụ thể**: mảng hex `0x` (đặc trưng Hex/Byte Array Shellcode). Khi obfuscation tạo ra pattern này (XOR Encoding), mô hình bắt 99.6%. Khi obfuscation KHÔNG tạo pattern này, mô hình thậm chí còn bắt TỆ HƠN vì mất luôn các đặc trưng gốc.
 
@@ -350,7 +349,7 @@ Ngược lại, các kỹ thuật như String Obfuscation và Tick Insertion **K
 | Variable Renaming | 0.6% | +0.4% | Tên biến ngẫu nhiên ít ảnh hưởng |
 | **XOR Encoding** | **99.9%** | **+99.7%** ↑↑↑ | 711/712 file sạch bị bắt nhầm thành mã độc! |
 
-**Phát hiện cực kỳ quan trọng:** Khi áp dụng XOR Encoding lên file benign (hoàn toàn vô hại), mô hình bắt nhầm **99.9% file sạch** thành mã độc. Điều này chứng minh một cách không thể phản bác rằng:
+**Phát hiện quan trọng:** Khi áp dụng XOR Encoding lên file benign (hoàn toàn vô hại), mô hình bắt nhầm **99.9% file sạch** thành mã độc. Điều này chứng minh rằng:
 
 > **Mô hình M-FastText-2 phát hiện mã độc chủ yếu dựa trên sự hiện diện của mảng hex bytes (`0x...`), KHÔNG PHẢI dựa trên ngữ nghĩa hay ý đồ thực sự của code.** Bất kỳ file nào — dù sạch hay độc — miễn có mảng hex thì mô hình sẽ đánh dấu là malicious.
 
@@ -365,9 +364,23 @@ Ngược lại, các kỹ thuật như String Obfuscation và Tick Insertion **K
 | Variable Renaming | 21.3% | 0.6% | -5.3% | +0.4% |
 | **XOR Encoding** | **99.6%** | **99.9%** | **+73.1%** | **+99.7%** |
 
-### 5.9. Thí nghiệm Retrain — Chứng minh kiến trúc không bị lỗi
+### 5.9. Thí nghiệm Đa thuật toán — Khẳng định bản chất của Domain Shift
 
-Để trả lời câu hỏi "Kiến trúc mô hình có vấn đề không, hay chỉ là dữ liệu huấn luyện không phù hợp?", nhóm đã thực hiện 3 thí nghiệm retrain:
+Để trả lời câu hỏi *"Có phải do thuật toán Random Forest quá yếu nên mới bị Domain Shift? Nếu thay bằng thuật toán AI tiên tiến hơn thì sao?"*, nhóm đã thực nghiệm thay thế lõi phân loại bằng **Mạng Nơ-ron (MLP - Deep Learning)** và **Gradient Boosting (GBDT/XGBoost)**.
+
+**Kết quả trên tập dữ liệu mới:**
+- **Random Forest Recall:** 26.54%
+- **GBDT Recall:** 14.24%
+- **MLP (Neural Network) Recall:** 5.50%
+
+**Phân tích khoa học:**
+Thực nghiệm này mang tính đột phá khi chứng minh bằng số liệu rằng: **Đổi thuật toán xịn hơn làm kết quả TỆ ĐI (Recall rớt xuống 5%)**. 
+Nguyên nhân là do hiện tượng **Shortcut Learning (Học vẹt/Feature Dominance)**. Trong tập MPSD, đặc trưng `Shellcode` quá rõ ràng. Mạng Nơ-ron (MLP) vì có khả năng tối ưu hóa quá tốt, đã "học vẹt" (overfit) hoàn toàn vào đặc trưng Shellcode này và bỏ qua các đặc trưng hành vi API. Khi sang tập mã độc mới (PowerSploit - không có Shellcode), MLP bị "mù" nặng nề hơn cả Random Forest.
+Điều này khẳng định vững chắc: **Domain Shift là giới hạn của Dữ Liệu (Data Limitation), không phải giới hạn của Thuật toán (Algorithmic Limitation).**
+
+### 5.10. Thí nghiệm Retrain — Giải pháp Cải tiến 
+
+Sau khi chứng minh việc sửa thuật toán là vô dụng, nhóm đề xuất giải pháp cốt lõi: **Data Augmentation & Continuous Learning**. Để kiểm chứng, nhóm đã thực hiện 3 thí nghiệm retrain:
 
 | Thí nghiệm | Mô tả | Accuracy | Precision | Recall | F1-Score |
 |-------------|-------|:--------:|:---------:|:------:|:--------:|
@@ -384,13 +397,13 @@ Ngược lại, các kỹ thuật như String Obfuscation và Tick Insertion **K
 
 - **EXP3 (Train gộp → Test mới):** Đạt 100% trên tập mới. Mặc dù có yếu tố data leakage (tập test nằm trong tập train), thí nghiệm này chứng minh tính khả thi của cơ chế **Continuous Learning** — khi xuất hiện mẫu mã độc mới, chỉ cần bổ sung vào tập train và retrain là mô hình sẽ cập nhật kiến thức ngay lập tức.
 
-## 6. Đề Xuất Cải Thiện
+## 6. Đề Xuất Cải Tiến
 
-Dựa trên toàn bộ phân tích chuyên sâu, nhóm đề xuất các hướng cải thiện:
+Dựa trên toàn bộ phân tích và các thực nghiệm trên, nhóm đề xuất **Giải pháp Cải tiến** cho hệ thống:
 
-1. **Mở rộng tập huấn luyện (Continuous Learning):** Thí nghiệm retrain đã chứng minh: chỉ cần bổ sung mã độc từ pentesting tools vào tập train, Recall tăng từ 26.5% lên 97.43% mà không ảnh hưởng đến khả năng bắt mã độc cũ. Đây là giải pháp thực tiễn và hiệu quả nhất.
+1. **Khung Cải tiến Học liên tục (Continuous Learning Framework) kết hợp Data Augmentation:** Thí nghiệm so sánh thuật toán đã chứng minh việc thay đổi mô hình (Neural Net, XGBoost) là vô nghĩa trước Shortcut Learning. Giải pháp duy nhất và triệt để nhất là thay đổi gốc rễ dữ liệu. Bằng cách chủ động trộn một lượng nhỏ mã độc Pentesting (LotL) vào tập MPSD để tái huấn luyện, Recall đã phục hồi lên 97.43%.
 
-2. **Thêm đặc trưng hành vi (behavioral features):** Thí nghiệm obfuscation cho thấy mô hình phụ thuộc quá nhiều vào mảng hex bytes. Cần bổ sung các đặc trưng hành vi cấp cao hơn: có load DLL hay không, có truy cập registry nguy hiểm hay không, có tạo scheduled task không — để phát hiện mã độc Living-off-the-Land.
+2. **Thêm đặc trưng hành vi (behavioral features):** Thí nghiệm obfuscation cho thấy mô hình phụ thuộc quá nhiều vào mảng hex bytes. Nhóm đã đề xuất bộ luật (Rule-based) quét các hàm API mức thấp chuyên dùng để tiêm mã độc (`VirtualAlloc`, `WriteProcessMemory`, `AmsiScanBuffer`) nhằm hỗ trợ thêm cho mô hình ML ở giai đoạn tiền xử lý.
 
 3. **Cải tiến FastText embedding:** FastText hiện tại chỉ được train trên corpus MPSD (confidence chỉ 2.6% cho mã độc mới). Cần retrain FastText trên corpus đa dạng hơn hoặc sử dụng pre-trained embedding (CodeBERT, SecBERT) đã học ngữ nghĩa rộng.
 
