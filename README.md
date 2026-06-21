@@ -21,8 +21,6 @@ NT230-G11/
 ├── src/experiments/evaluate_new_dataset_78dim.py # Đánh giá bản 78 chiều trên tập dữ liệu mới
 ├── src/experiments/evaluate_enhanced_model.py    # Đánh giá mô hình đã được cải tiến
 ├── src/experiments/retrain_new_dataset.py        # Thí nghiệm Retrain (Giải quyết Domain Shift)
-├── docs/REPORT_PART_C.md                  # Báo cáo chi tiết kết quả Phần C
-├── docs/SYSTEM_DESCRIPTION.md             # Mô tả chi tiết hệ thống và các đặc trưng
 ├── requirements.txt                       # Danh sách thư viện Python cần thiết
 ├── data/mpsd/                             # Tập dữ liệu gốc (Phần A)
 ├── data/new_dataset/                      # Tập dữ liệu mới thu thập (Phần C)
@@ -67,5 +65,3 @@ Kiểm chứng giải pháp Data Augmentation để phục hồi sức mạnh m�
 ```bash
 python src/experiments/evaluate_enhanced_model.py
 ```
-
-Kết quả phân tích chi tiết có tại `docs/REPORT_PART_C.md` và kiến trúc hệ thống tại `docs/SYSTEM_DESCRIPTION.md`.
