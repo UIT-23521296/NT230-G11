@@ -1,5 +1,14 @@
 # NT230-G11: Malicious PowerShell Script Detection (M-FastText-2)
 
+**Mã nhóm SV thực hiện: G11**
+
+**Thông tin thành viên nhóm:**
+| MSSV | Họ và tên |
+| :--- | :--- |
+| 23521602 | Khương Ngọc Toàn |
+| 23521815 | Phan Quang Vũ |
+| 23521296 | Vũ Nguyễn Minh Quang |
+
 Repository này chứa mã nguồn, tập dữ liệu và báo cáo thực nghiệm cho đồ án môn học Cơ chế mã độc (NT230) - Nhóm 11. Đồ án triển khai lại và mở rộng mô hình **M-FastText-2** từ bài báo khoa học về phát hiện mã độc PowerShell dựa trên đặc trưng lai (Hybrid Features).
 
 ## Nội dung đồ án
