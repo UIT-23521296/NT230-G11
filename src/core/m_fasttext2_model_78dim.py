@@ -455,8 +455,8 @@ AST_5_SPECIAL_PATTERNS = OrderedDict([
 def calculate_ast_depth(script):
     """
     Calculate the maximum nesting depth of the AST.
-    Approximated by tracking brace {} nesting depth,
-    ignoring braces inside string literals.
+    Approximated by tracking brace {} and parenthesis () nesting depth,
+    ignoring braces/parentheses inside string literals.
     """
     max_depth = 0
     current_depth = 0
@@ -470,10 +470,10 @@ def calculate_ast_depth(script):
         elif char == '"' and not in_single_quote and prev_char != '`':
             in_double_quote = not in_double_quote
         elif not in_single_quote and not in_double_quote:
-            if char == '{':
+            if char in ('{', '('):
                 current_depth += 1
                 max_depth = max(max_depth, current_depth)
-            elif char == '}':
+            elif char in ('}', ')'):
                 current_depth = max(0, current_depth - 1)
         prev_char = char
 

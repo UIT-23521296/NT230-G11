@@ -19,3 +19,6 @@ results/574dim/
 src/core/m_fasttext2_model.py
 src/experiments/evaluate_new_dataset.py
 src/experiments/reproduce_table3.py
+
+references/
+docs/FINAL_REPORT.md
